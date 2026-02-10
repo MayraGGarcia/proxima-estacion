@@ -1,0 +1,24 @@
+{
+  "name": "proxima-estacion",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "install-all": "concurrently \"npm install --prefix frontend\" \"npm install --prefix backend\"",
+    "start": "concurrently \"npm run dev --prefix frontend\" \"node backend/server.js\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MayraGGarcia/proxima-estacion.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MayraGGarcia/proxima-estacion/issues"
+  },
+  "homepage": "https://github.com/MayraGGarcia/proxima-estacion#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
