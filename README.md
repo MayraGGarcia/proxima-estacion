@@ -43,17 +43,10 @@ npm run install-all
 npm start
 ```
 
-La terminal mostrará logs combinados: el servidor en el puerto *3000* y Vite en el puerto *5173*.
-
 ---
 
 ## 🛠️ Tecnologías Aplicadas
-- **Frontend**: React 18, React Router Dom, Tailwind CSS.
+- **Frontend**: React, React Router Dom, Tailwind CSS.
 - **Backend**: Express.js, Middlewares de CORS y JSON.
 - **Utilidades**: Concurrently (para gestión de procesos paralelos).
-
-## 📋 Estaciones del Recorrido (Funcionalidades)
-1. **Terminal Central (Inicio)**: Landing page con el "Tren Tipográfico" que consume datos dinámicos del backend.
-2. **Validar Boleto (Auth)**: Puerta de acceso para usuarios registrados.
-3. **Mi Estación (Dashboard)**: Gestión personal de líneas de lectura y monitoreo de progreso.
 
