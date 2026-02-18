@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { EstacionProvider } from './context/EstacionContext';
 
 // Importación de Páginas
 import Inicio from './pages/Inicio';
 import InicioLoggeado from './pages/InicioLoggeado';
 import Auth from './pages/Auth';
-import Perfil from './pages/Perfil'; // <--- Nueva página de Perfil
+import Perfil from './pages/Perfil';
+import RutaActiva from './pages/RutaActiva';
+import MuroEstaciones from './pages/MuroEstaciones';
 
 function App() {
   // --- ESTADOS GLOBALES ---
@@ -32,6 +35,7 @@ function App() {
 
   // --- RENDERIZADO DEL SISTEMA ---
   return (
+    <EstacionProvider>
     <Router>
       <Routes>
         {/* RUTA PRINCIPAL CON LÓGICA CONDICIONAL */}
@@ -80,10 +84,17 @@ function App() {
           } 
         />
 
+        {/* RUTA ACTIVA */}
+        <Route path="/ruta/:id" element={<RutaActiva />} />
+
+        {/* MURO DE ESTACIONES */}  
+        <Route path="/muro" element={<MuroEstaciones />} />
+
         {/* RUTA COMODÍN (REDIRECCIÓN) */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
+    </EstacionProvider>
   );
 }
 

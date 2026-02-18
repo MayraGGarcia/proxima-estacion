@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import TerminalCreacion from '../components/TerminalCreacion';
 
 const Perfil = () => {
   // Datos simulados del usuario
@@ -10,10 +11,13 @@ const Perfil = () => {
     { label: "Rango_Pasajero", value: "PLAT" }
   ];
 
+  const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+
+  // MODIFICACIÓN: 2 líneas completadas (100%) y 1 en progreso
   const misLineas = [
-    { id: 1, titulo: "Mi Ruta de Terror", progreso: 65, ultimaEstacion: "It (Stephen King)", color: "#FF5F00" },
-    { id: 2, titulo: "Clásicos Rusos", progreso: 40, ultimaEstacion: "Guerra y Paz", color: "#1A1A1A" },
-    { id: 3, titulo: "Lecturas de Verano", progreso: 90, ultimaEstacion: "El Gran Gatsby", color: "#FF5F00" },
+    { id: 1, titulo: "Mi Ruta de Terror", progreso: 100, ultimaEstacion: "It (Stephen King)", color: "#FF5F00", estado: "Finalizada" },
+    { id: 2, titulo: "Clásicos Rusos", progreso: 100, ultimaEstacion: "Guerra y Paz", color: "#1A1A1A", estado: "Finalizada" },
+    { id: 3, titulo: "Lecturas de Verano", progreso: 90, ultimaEstacion: "El Gran Gatsby", color: "#FF5F00", estado: "En Tránsito" },
   ];
 
   return (
@@ -66,7 +70,7 @@ const Perfil = () => {
                 <h4 className="font-black uppercase text-xs mb-4 border-b-2 border-[#1A1A1A] inline-block">Sellos de Estación</h4>
                 <div className="grid grid-cols-4 gap-2 mt-2">
                   {[...Array(8)].map((_, i) => (
-                    <div key={i} className="aspect-square border-2 border-[#1A1A1A] rounded-full flex items-center justify-center opacity-20 grayscale hover:opacity-100 transition-all cursor-help bg-[#F5F5F5]">
+                    <div key={i} className={`aspect-square border-2 border-[#1A1A1A] rounded-full flex items-center justify-center transition-all cursor-help bg-[#F5F5F5] ${i < 5 ? 'opacity-100 bg-[#FF5F00]/20' : 'opacity-20 grayscale'}`}>
                       <div className="w-2 h-2 bg-[#1A1A1A] rounded-full"></div>
                     </div>
                   ))}
@@ -84,26 +88,32 @@ const Perfil = () => {
               </header>
 
               <div className="flex justify-end mb-8">
-                <button className="bg-[#1A1A1A] text-white px-8 py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-[#1A1A1A] transition-all shadow-[6px_6px_0px_0px_rgba(255,95,0,0.3)] active:shadow-none">
-                  + Iniciar Nueva Ruta
+                <button
+                  onClick={() => setIsTerminalOpen(true)}
+                  className="bg-[#1A1A1A] text-white px-8 py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-[#1A1A1A] transition-all shadow-[6px_6px_0px_0px_rgba(255,95,0,0.3)] active:shadow-none">
+                    + Iniciar Nueva Ruta
                 </button>
               </div>
 
               <div className="space-y-6">
                 {misLineas.map((linea) => (
-                  <div key={linea.id} className="bg-[#E8E4D9] border-4 border-[#1A1A1A] p-8 flex flex-col md:flex-row justify-between items-center gap-8 shadow-[10px_10px_0px_0px_#1A1A1A] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all">
+                  <div key={linea.id} className={`bg-[#E8E4D9] border-4 border-[#1A1A1A] p-8 flex flex-col md:flex-row justify-between items-center gap-8 shadow-[10px_10px_0px_0px_#1A1A1A] transition-all ${linea.progreso === 100 ? 'opacity-80' : 'hover:shadow-none hover:translate-x-1 hover:translate-y-1'}`}>
                     <div className="text-left flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <div className="w-2 h-2 bg-[#FF5F00]"></div>
-                        <span className="font-mono text-[9px] font-black uppercase tracking-widest">Línea_Activa_0{linea.id}</span>
+                        <div className={`w-2 h-2 ${linea.progreso === 100 ? 'bg-green-600' : 'bg-[#FF5F00]'}`}></div>
+                        <span className="font-mono text-[9px] font-black uppercase tracking-widest">
+                          {linea.progreso === 100 ? 'Línea_Finalizada' : `Línea_Activa_0${linea.id}`}
+                        </span>
                       </div>
                       <h4 className="text-3xl font-black uppercase italic leading-none mb-2">{linea.titulo}</h4>
-                      <p className="text-[10px] font-bold text-[#1A1A1A]/40 uppercase">Próxima Parada: {linea.ultimaEstacion}</p>
+                      <p className="text-[10px] font-bold text-[#1A1A1A]/40 uppercase">
+                        {linea.progreso === 100 ? 'Ruta Completada con Éxito' : `Próxima Parada: ${linea.ultimaEstacion}`}
+                      </p>
                     </div>
 
                     <div className="w-full md:w-56 flex flex-col gap-2">
                       <div className="w-full h-4 bg-white/50 border-2 border-[#1A1A1A] relative">
-                        <div className="h-full bg-[#1A1A1A]" style={{ width: `${linea.progreso}%` }}></div>
+                        <div className={`h-full ${linea.progreso === 100 ? 'bg-green-600' : 'bg-[#1A1A1A]'}`} style={{ width: `${linea.progreso}%` }}></div>
                       </div>
                       <div className="flex justify-between font-mono text-[9px] font-black">
                         <span>ESTADO</span>
@@ -111,25 +121,19 @@ const Perfil = () => {
                       </div>
                     </div>
 
-                    <button className="w-full md:w-auto bg-[#1A1A1A] text-white px-6 py-4 font-black uppercase text-[10px] hover:bg-[#FF5F00] hover:text-[#1A1A1A] transition-colors">
-                      Abordar
-                    </button>
+                    <Link 
+                      to={`/ruta/${linea.id}`} 
+                      className={`w-full md:w-auto px-6 py-4 font-black uppercase text-[10px] transition-colors text-center border-2 border-[#1A1A1A] ${linea.progreso === 100 ? 'bg-white text-[#1A1A1A] hover:bg-[#1A1A1A] hover:text-white' : 'bg-[#1A1A1A] text-white hover:bg-[#FF5F00] hover:text-[#1A1A1A]'}`}
+                    >
+                      {linea.progreso === 100 ? 'Revisar Bitácora' : 'Abordar'}
+                    </Link>
                   </div>
                 ))}
-              </div>
-
-              <div className="mt-12 bg-white border-4 border-[#1A1A1A] p-8 shadow-[10px_10px_0px_0px_rgba(26,26,26,0.05)]">
-                  <h4 className="font-black uppercase text-xs mb-6 border-b-2 border-[#FF5F00] inline-block">Historial de Transbordos</h4>
-                  <div className="space-y-4 font-mono text-[10px] text-gray-500">
-                      <p className="flex gap-4"><span className="text-[#FF5F00] font-black underline">10:15</span> <span>Arribo a estación "It". Validado por sistema central.</span></p>
-                      <p className="flex gap-4"><span className="font-black underline">AYER</span> <span>Apertura de nueva línea: "Clásicos Rusos".</span></p>
-                      <p className="flex gap-4"><span className="font-black underline">05/02</span> <span>Sincronización completa con Terminal_Global.</span></p>
-                  </div>
               </div>
             </main>
           </div>
         </div>
-
+        
         {/* FOOTER */}
         <footer className="bg-[#1A1A1A] text-white p-12 text-left border-t-8 border-[#FF5F00]">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
@@ -147,6 +151,16 @@ const Perfil = () => {
           </div>
         </footer>
       </div>
+
+      <TerminalCreacion 
+        isOpen={isTerminalOpen} 
+        onClose={() => setIsTerminalOpen(false)}
+        onSave={async (nuevaRuta) => {
+          console.log("Nueva ruta despachada:", nuevaRuta);
+          setIsTerminalOpen(false);
+        }}
+      />
+
     </div>
   );
 };
