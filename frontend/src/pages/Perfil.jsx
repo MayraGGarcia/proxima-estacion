@@ -13,7 +13,6 @@ const Perfil = () => {
 
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
 
-  // MODIFICACIÓN: 2 líneas completadas (100%) y 1 en progreso
   const misLineas = [
     { id: 1, titulo: "Mi Ruta de Terror", progreso: 100, ultimaEstacion: "It (Stephen King)", color: "#FF5F00", estado: "Finalizada" },
     { id: 2, titulo: "Clásicos Rusos", progreso: 100, ultimaEstacion: "Guerra y Paz", color: "#1A1A1A", estado: "Finalizada" },
@@ -40,7 +39,7 @@ const Perfil = () => {
 
           <div className="flex flex-col lg:flex-row gap-8 mb-20">
             
-            {/* COLUMNA IZQUIERDA: TARJETA DE IDENTIDAD */}
+            {/* COLUMNA IZQUIERDA */}
             <aside className="lg:w-1/3 space-y-8">
               <div className="bg-[#E8E4D9] text-[#1A1A1A] p-8 border-4 border-[#1A1A1A] shadow-[12px_12px_0px_0px_#1A1A1A]">
                 <div className="w-24 h-24 bg-[#1A1A1A] mb-6 flex items-center justify-center border-4 border-[#FF5F00] shadow-lg rotate-3">
@@ -78,7 +77,7 @@ const Perfil = () => {
               </div>
             </aside>
 
-            {/* COLUMNA DERECHA: ITINERARIO PERSONAL */}
+            {/* COLUMNA DERECHA */}
             <main className="lg:w-2/3 text-left">
               <header className="mb-12">
                   <span className="bg-[#1A1A1A] text-white px-2 py-1 text-[9px] font-mono uppercase tracking-[0.2em] mb-4 inline-block">User_Personal_Dashboard</span>

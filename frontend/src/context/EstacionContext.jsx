@@ -1,6 +1,5 @@
 import React, { createContext, useState, useContext } from 'react';
 
-// Reporte inicial para que el muro no esté vacío al empezar
 const REPORTES_INICIALES = [
   {
     id: "REP-999",

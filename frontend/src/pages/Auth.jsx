@@ -79,7 +79,7 @@ const Auth = ({ setIsLogged }) => {
           </button>
         </div>
 
-        {/* PARTE DERECHA: TALÓN DE CONTROL */}
+        {/* PARTE DERECHA */}
         <div className="flex-1 bg-[#D9D4C7] p-8 flex flex-col justify-between items-center relative overflow-hidden border-t-4 md:border-t-0 border-[#1A1A1A]">
           <div className="absolute top-1/2 -left-4 -translate-y-1/2 w-8 h-8 bg-[#1A1A1A] rounded-full hidden md:block"></div>
           
