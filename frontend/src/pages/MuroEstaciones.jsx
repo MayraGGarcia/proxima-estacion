@@ -1,69 +1,175 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import { useEstacion } from '../context/EstacionContext';
 
-const MuroEstaciones = () => {
-  const { reportes } = useEstacion();
+const PortadaEstacion = ({ est }) => {
+  if (!est) return <div className="w-20 h-28 bg-[#1A1A1A]" />;
+  
+  const url = est.portada || est.imagen || est.cover || 
+              (est.coverId ? `https://covers.openlibrary.org/b/id/${est.coverId}-M.jpg` : null);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans p-4 md:p-8 relative text-left">
-      <div className="relative z-10 max-w-5xl mx-auto">
-        
-        <header className="border-b-8 border-[#1A1A1A] pb-6 mb-12 flex justify-between items-end">
-          <div>
-            <span className="bg-[#1A1A1A] text-white px-2 py-0.5 font-black text-[10px] uppercase tracking-widest">Frecuencia Comunitaria</span>
-            <h1 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter leading-none mt-2">REGISTROS</h1>
-          </div>
-          <Link to="/perfil" className="font-black uppercase text-xs border-4 border-[#1A1A1A] px-6 py-4 hover:bg-[#FF5F00] transition-all shadow-[6px_6px_0px_0px_#1A1A1A]">
-            Nueva Ruta
-          </Link>
-        </header>
-
-        <div className="grid grid-cols-1 gap-6">
-          {reportes.map((rep) => (
-            <div 
-              key={rep.id} 
-              className={`border-4 border-[#1A1A1A] p-6 transition-all ${
-                rep.esPropio 
-                  ? 'bg-white shadow-[10px_10px_0px_0px_#FF5F00] ring-4 ring-[#FF5F00]/20' 
-                  : 'bg-white/50 shadow-[6px_6px_0px_0px_#1A1A1A] opacity-80'
-              }`}
-            >
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-                <div className="flex items-center gap-3">
-                  <div className={`w-3 h-3 rounded-full ${rep.esPropio ? 'bg-[#FF5F00] animate-pulse' : 'bg-[#1A1A1A]'}`}></div>
-                  <span className="font-mono text-[10px] font-black uppercase opacity-50 italic">
-                    {rep.esPropio ? "Tu Reporte de Vía" : `Transmisión de: ${rep.maquinista}`}
-                  </span>
-                </div>
-                <span className="font-mono text-[10px] font-black bg-[#1A1A1A] text-white px-2 py-1 uppercase">
-                  Sello_{rep.id} // {rep.fecha}
-                </span>
-              </div>
-
-              <h3 className="text-xl font-black uppercase italic mb-3 tracking-tighter">
-                {rep.ruta}
-              </h3>
-              
-              <div className="bg-[#1A1A1A] text-white p-4 font-bold text-sm uppercase italic leading-relaxed">
-                "{rep.extracto}"
-              </div>
-
-              <div className="mt-4 flex gap-4">
-                <button className="text-[10px] font-black uppercase underline decoration-2 hover:text-[#FF5F00] transition-colors">
-                  [ Sellar Sintonía ]
-                </button>
-                <button className="text-[10px] font-black uppercase underline decoration-2 hover:text-[#FF5F00] transition-colors">
-                  [ Copiar Coordenadas ]
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
+    <div className="w-20 h-28 bg-[#1A1A1A] flex-shrink-0 border-2 border-black shadow-[4px_4px_0px_0px_#FF5F00] overflow-hidden relative">
+      {url ? (
+        <img 
+          src={url} 
+          alt="Portada" 
+          className="w-full h-full object-cover" 
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.nextSibling.style.display = 'flex';
+          }}
+        />
+      ) : null}
+      <div className={`${url ? 'hidden' : 'flex'} absolute inset-0 flex-col items-center justify-center bg-[#1A1A1A]`}>
+        <span className="text-[#FF5F00] font-black text-[8px]">SIN_DATOS</span>
       </div>
     </div>
   );
+};
+
+const BitacoraRuta = ({ rutaId }) => {
+  const { rutas, historial, reportes } = useEstacion();
+  const [registrosBackend, setRegistrosBackend] = useState([]);
+
+  const infoLocal = reportes.find(r => String(r.id) === String(rutaId)) || 
+                    rutas.find(r => String(r._id) === String(rutaId));
+
+  useEffect(() => {
+    fetch(`http://localhost:5000/api/registros/${rutaId}`)
+      .then(res => res.json())
+      .then(data => {
+        const normalizado = (Array.isArray(data) ? data : []).map(reg => ({
+          ...reg,
+          reporteFinal: reg.reporteFinal || reg.extracto || '',
+          bitacoras: (reg.bitacoras || []).map(b => ({
+            estacionTitulo: b.estacionTitulo || b.titulo,
+            estacionAutor: b.estacionAutor || b.autor,
+            portada: b.portada || b.imagen,
+            texto: b.texto || b.bitacora
+          }))
+        }));
+        setRegistrosBackend(normalizado);
+      })
+      .catch(err => console.error("Error cargando backend:", err));
+  }, [rutaId]);
+
+  const registrosFinales = (() => {
+    const local = reportes.find(r => String(r.id) === String(rutaId));
+    let lista = [...registrosBackend];
+
+    if (local) {
+      const contenidoLocal = local.extracto || local.reporteFinal;
+      lista = lista.filter(r => r.reporteFinal !== contenidoLocal);
+      
+      lista.unshift({
+        _id: local.id,
+        maquinista: 'ADMIN_01 (LOCAL)',
+        fechaFinalizacion: local.fecha,
+        reporteFinal: contenidoLocal,
+        bitacoras: (local.estaciones || []).map(e => ({
+          estacionTitulo: e.titulo,
+          estacionAutor: e.autor,
+          portada: e.portada || e.imagen,
+          texto: e.bitacora || e.texto
+        }))
+      });
+    }
+    return lista;
+  })();
+
+  return (
+    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] p-4 md:p-8 font-sans">
+      <div className="max-w-3xl mx-auto">
+        <Link to="/perfil" className="inline-block border-2 border-black px-6 py-2 font-black uppercase text-[10px] mb-8 hover:bg-black hover:text-white shadow-[4px_4px_0px_0px_#FF5F00] transition-all">
+          ← VOLVER AL PERFIL
+        </Link>
+
+        <header className="border-b-8 border-black pb-6 mb-12">
+          <span className="bg-[#FF5F00] text-black px-2 py-0.5 font-black text-[10px] uppercase">Terminal de Registros</span>
+          <h1 className="text-6xl font-black uppercase italic tracking-tighter mt-2">
+            {infoLocal?.nombre || infoLocal?.ruta || 'RUTA_EXTERNA'}
+          </h1>
+        </header>
+
+        <div className="space-y-12">
+          {registrosFinales.map((reg, idx) => (
+            <div key={idx} className="border-4 border-black bg-white shadow-[10px_10px_0px_0px_#1A1A1A]">
+              <div className="bg-black p-4 flex justify-between items-center text-white">
+                <span className="font-black uppercase italic">{reg.maquinista}</span>
+                <span className="font-mono text-[10px] opacity-50">{reg.fechaFinalizacion}</span>
+              </div>
+              
+              <div className="divide-y-2 divide-black/5">
+                {reg.bitacoras?.map((bit, i) => (
+                  <div key={i} className="p-6 flex gap-6">
+                    <PortadaEstacion est={bit} />
+                    <div className="flex-grow">
+                      <p className="font-black uppercase text-sm mb-1">{bit.estacionTitulo}</p>
+                      <p className="font-mono text-[9px] text-gray-400 uppercase mb-4">{bit.estacionAutor}</p>
+                      <div className="bg-[#F5F5F5] border-l-4 border-[#FF5F00] p-4 text-xs italic font-bold">
+                        "{bit.texto || 'Sin comentarios en esta estación.'}"
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* REPORTE FINAL RESTAURADO */}
+              {reg.reporteFinal && (
+                <div className="bg-[#FFFAF5] p-6 border-t-4 border-[#FF5F00]">
+                  <p className="text-[#FF5F00] font-black text-[8px] uppercase mb-2">Comentario Final:</p>
+                  <div className="bg-black text-white p-5 font-bold text-sm italic">
+                    "{reg.reporteFinal}"
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MuroGlobal = ({ rutas, reportes }) => {
+  const todas = [
+    ...(reportes || []).map(r => ({ ...r, id: r.id, nombre: r.ruta, local: true })),
+    ...(rutas || []).filter(r => !reportes.some(rep => String(rep.id) === String(r._id)))
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#F5F5F5] p-8">
+      <div className="max-w-5xl mx-auto text-left">
+        <header className="border-b-8 border-black pb-6 mb-12">
+          <h1 className="text-7xl font-black uppercase italic tracking-tighter">REGISTROS</h1>
+        </header>
+        <div className="grid grid-cols-1 gap-8">
+          {todas.map(r => (
+            <div key={r.id || r._id} className="border-4 border-black p-8 bg-white shadow-[12px_12px_0px_0px_#1A1A1A]">
+              <h3 className="text-3xl font-black uppercase italic mb-6">{r.nombre || r.ruta}</h3>
+              <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                {(r.estaciones || []).map((e, i) => (
+                  <div key={i} className="w-10 h-14 bg-black flex-shrink-0 border border-black/10">
+                    <img src={e.portada || e.imagen} className="w-full h-full object-cover grayscale opacity-50" alt="" onError={(e)=>e.target.style.display='none'}/>
+                  </div>
+                ))}
+              </div>
+              <Link to={`/muro/${r._id || r.id}`} className="border-2 border-black px-4 py-2 font-black text-[10px] uppercase hover:bg-[#FF5F00] transition-all">
+                ABRIR BITÁCORA →
+              </Link>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MuroEstaciones = () => {
+  const { rutaId } = useParams();
+  const { reportes, rutas } = useEstacion();
+  return rutaId ? <BitacoraRuta rutaId={rutaId} /> : <MuroGlobal rutas={rutas} reportes={reportes} />;
 };
 
 export default MuroEstaciones;

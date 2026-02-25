@@ -53,6 +53,46 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
     setConvoy(ordenado);
   }, [criterio]);
 
+  // 4. LÓGICA DE DESPACHO AL BACKEND
+  const handleDespacharAlServidor = async () => {
+  const payload = {
+    nombre: nombreRuta,
+    estaciones: convoy,
+    configuracion: {
+      metodo: criterio, // 'Manual', 'Kilometraje' o 'Cronología'
+      esPublica: esPublica,
+      justificacion: criterio === 'Manual' ? justificacion : 'Sistema Automático'
+    },
+    pasajeros: 1 //El que creo que la Ruta es el primer pasajero
+  };
+
+  try {
+    const response = await fetch('http://localhost:5000/api/despacho', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log("Despacho exitoso:", data);
+      
+      // IMPORTANTE: Pasamos los datos al contexto para que el tren empiece a moverse
+      if (onSave) onSave(data); 
+      
+      onClose(); 
+    } else {
+      // Si el servidor responde pero con error (ej: 400 o 500)
+      const errorData = await response.json();
+      console.error("Detalle del error:", errorData);
+      alert(`Error en el servidor: ${errorData.error || 'Verifique los datos'}`);
+    }
+  } catch (err) {
+    console.error("Error de conexión:", err);
+    alert("No se pudo conectar con el servidor. ¿Está encendido el Backend?");
+  }
+};
+
   // VALIDACIÓN DE DESPACHO
   const despachoHabilitado = 
     nombreRuta.trim().length >= 3 &&
@@ -201,13 +241,7 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
             <div className="p-8 bg-[#E8E4D9] border-t-4 border-[#1A1A1A]">
               <button 
                 disabled={!despachoHabilitado}
-                onClick={() => onSave({ 
-                  nombre: nombreRuta, 
-                  estaciones: convoy, 
-                  esPublica, 
-                  criterio, 
-                  justificacion 
-                })}
+                onClick={handleDespacharAlServidor}
                 className={`w-full p-5 font-black uppercase text-sm border-4 border-[#1A1A1A] shadow-[10px_10px_0px_0px_#1A1A1A] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all ${despachoHabilitado ? 'bg-[#FF5F00]' : 'bg-gray-300 opacity-50 cursor-not-allowed'}`}
               >
                 DESPACHAR_LÍNEA_ACTIVA

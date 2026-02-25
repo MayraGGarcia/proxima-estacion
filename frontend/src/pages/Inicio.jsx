@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import Tren from '../components/Tren';
 
-// Componente para las estadísticas tipo cartel ferroviario (Split-flap)
+// Componente para las estadísticas tipo cartel ferroviario
 const FlapStat = ({ label, value }) => (
   <div className="flex flex-col items-center md:items-start">
     <span className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.3em] mb-3">
@@ -133,10 +133,22 @@ const Inicio = ({ isLogged, lineas, lineasAleatorias, barajarLineas }) => {
           </section>
 
           {/* TREN INTERACTIVO */}
-          <div className="-mx-8 mb-32 overflow-hidden">
-             <div className="px-8 mb-4 font-mono text-[10px] font-bold opacity-30 uppercase tracking-[0.5em]">Tráfico de Unidades en Vivo</div>
-            <Tren lineas={lineas} lineasAleatorias={lineasAleatorias} barajarLineas={barajarLineas} />
-          </div>
+          <section className="mb-32 overflow-visible">
+            <div className="px-8 mb-4 font-mono text-[10px] font-bold opacity-30 uppercase tracking-[0.5em]">
+              Tráfico de Unidades en Vivo // Red_Global
+            </div>
+            {/* Solo pasamos lineasAleatorias que es lo que espera el componente Tren */}
+            <Tren lineasAleatorias={lineasAleatorias} />
+            
+            <div className="flex justify-center mt-8">
+               <button 
+                 onClick={barajarLineas}
+                 className="font-mono text-[9px] uppercase font-black border-2 border-black px-4 py-2 hover:bg-[#FF5F00] transition-colors bg-white shadow-[4px_4px_0px_0px_#1A1A1A] active:shadow-none"
+               >
+                 [ Reordenar_Tráfico ]
+               </button>
+            </div>
+          </section>
 
 
           {/* REGISTROS DE PASAJEROS (OPINIONES) */}

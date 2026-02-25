@@ -1,53 +1,60 @@
 import React from 'react';
 
 const Tren = ({ lineasAleatorias }) => {
-  if (!lineasAleatorias || lineasAleatorias.length === 0) return null;
+  const datosRespaldo = [
+    { id: 1, nombre: "Línea_Distopía" },
+    { id: 2, nombre: "Línea_Realismo" },
+    { id: 3, nombre: "Línea_Sci-Fi" },
+    { id: 4, nombre: "Línea_Clásicos" }
+  ];
 
-  const trenInfinito = [...lineasAleatorias, ...lineasAleatorias, ...lineasAleatorias];
+  const datosAMostrar = (lineasAleatorias && lineasAleatorias.length > 0) 
+    ? lineasAleatorias 
+    : datosRespaldo;
+
+  const trenInfinito = [...datosAMostrar, ...datosAMostrar];
 
   return (
-    <div className="relative w-full overflow-hidden py-12 bg-white/50 border-y-2 border-[#1A1A1A]">
-      
-      {/* VÍAS DEL TREN */}
-      <div className="absolute bottom-10 left-0 w-full h-[6px] bg-[#1A1A1A] opacity-10"></div>
-      
-      {/* TREN */}
-      <div className="flex animate-marquee-right hover:[animation-play-state:paused] whitespace-nowrap">
+    <div className="relative w-full overflow-hidden py-12 bg-white/50 border-y-4 border-[#1A1A1A]">
+      <style>
+        {`
+          @keyframes train-run-right {
+            0% { transform: translateX(-50%); }
+            100% { transform: translateX(0); }
+          }
+          .train-track {
+            display: flex;
+            /* Cambiamos a la nueva animación hacia la derecha */
+            animation: train-run-right 30s linear infinite;
+            width: max-content;
+          }
+        `}
+      </style>
+
+      <div className="train-track hover:[animation-play-state:paused]">
         {trenInfinito.map((linea, index) => (
-          <div key={`${linea.id || index}-${index}`} className="inline-flex items-center">
+          <div key={`${linea.id || index}-${index}`} className="flex items-center">
+            {/* ENGANCHE IZQUIERDO */}
+            <div className="w-8 h-3 bg-[#1A1A1A] -mr-2 shadow-lg z-0"></div>
             
-            {/* EL VAGÓN NARANJA CLÁSICO */}
-            <div className="flex flex-col items-center">
-              <div className="relative flex items-center bg-[#FF5F00] border-[4px] border-[#1A1A1A] h-24 min-w-[280px] shadow-[8px_8px_0px_0px_rgba(26,26,26,1)] mx-4">
-                
-                {/* VENTANAS IZQUIERDA */}
+            <div className="flex flex-col items-center z-10">
+              {/* VAGÓN */}
+              <div className="relative flex items-center bg-[#FF5F00] border-[4px] border-[#1A1A1A] h-24 min-w-[280px] shadow-[8px_8px_0px_0px_rgba(26,26,26,1)] mx-2">
                 <div className="flex gap-2 ml-4">
-                  <div className="w-8 h-10 bg-white border-[3px] border-[#1A1A1A] flex items-center justify-center">
-                    <div className="w-[2px] h-full bg-[#1A1A1A] opacity-20"></div>
-                  </div>
-                  <div className="w-8 h-10 bg-white border-[3px] border-[#1A1A1A] flex items-center justify-center">
-                    <div className="w-[2px] h-full bg-[#1A1A1A] opacity-20"></div>
-                  </div>
+                  <div className="w-8 h-10 bg-white border-[3px] border-[#1A1A1A]"></div>
+                  <div className="w-8 h-10 bg-white border-[3px] border-[#1A1A1A]"></div>
                 </div>
-
-                {/* TEXTO SEGURO */}
                 <div className="flex-grow px-6 text-center">
-                  <span className="block text-[8px] font-mono font-black text-[#1A1A1A] uppercase mb-1 opacity-60">
-                    PRÓXIMA ESTACIÓN
-                  </span>
-                  <span className="block text-lg font-black uppercase tracking-tighter text-white drop-shadow-[2px_2px_0px_rgba(26,26,26,1)]">
-                    {typeof linea.nombre === 'string' ? linea.nombre : "Línea_Activa"}
+                  <span className="block text-[8px] font-mono font-black text-[#1A1A1A] uppercase opacity-60 tracking-tighter">UNIDAD_RED</span>
+                  <span className="block text-lg font-black uppercase tracking-tighter text-white truncate max-w-[180px]">
+                    {linea.nombre || "Línea_Activa"}
                   </span>
                 </div>
-
-                {/* VENTANAS DERECHA */}
-                <div className="flex gap-2 mr-4">
-                  <div className="w-8 h-10 bg-white border-[3px] border-[#1A1A1A] flex items-center justify-center text-[#1A1A1A]">
-                    X
-                  </div>
+                <div className="w-8 h-10 bg-[#1A1A1A] text-[#FF5F00] mr-4 flex items-center justify-center font-black text-xs">
+                  {String(index + 1).padStart(2, '0')}
                 </div>
               </div>
-
+              
               {/* RUEDAS */}
               <div className="flex justify-around w-full px-12 -mt-1">
                 <div className="w-6 h-6 bg-[#1A1A1A] rounded-full border-4 border-gray-400"></div>
@@ -55,8 +62,8 @@ const Tren = ({ lineasAleatorias }) => {
               </div>
             </div>
 
-            {/* ENGANCHE */}
-            <div className="w-8 h-3 bg-[#1A1A1A] -ml-2 -mr-2 z-0 shadow-lg"></div>
+            {/* ENGANCHE DERECHO */}
+            <div className="w-8 h-3 bg-[#1A1A1A] -ml-2 shadow-lg z-0"></div>
           </div>
         ))}
       </div>
