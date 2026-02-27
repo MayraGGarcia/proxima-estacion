@@ -31,7 +31,7 @@ const FlapStat = ({ label, value }) => {
   );
 };
 
-// --- [COMPONENTE 2]: MODAL DE BITÁCORA ---
+// --- [COMPONENTE 2]: MODAL DE BITÁCORA (DETALLE) ---
 const ModalBitacora = ({ ruta, onClose, onSeguir }) => {
   if (!ruta) return null;
 
@@ -176,20 +176,12 @@ const BannerDesafio = ({ desafio, onAbordar }) => {
           </div>
         ) : (
           ruta && (
-            <div className="flex gap-3 flex-wrap">
-              <button
-                onClick={() => onAbordar(ruta)}
-                className="border-4 border-[#1A1A1A] px-6 py-3 text-[10px] font-black uppercase bg-[#1A1A1A] text-white hover:bg-white hover:text-[#1A1A1A] transition-all"
-              >
-                ⚡ Abordar Desafío →
-              </button>
-              <button
-                onClick={() => navigate(`/muro/${ruta._id}`)}
-                className="border-4 border-[#1A1A1A] px-6 py-3 text-[10px] font-black uppercase bg-transparent hover:bg-[#1A1A1A] hover:text-white transition-all opacity-60"
-              >
-                Ver bitácoras →
-              </button>
-            </div>
+            <button
+              onClick={() => onAbordar(ruta)}
+              className="border-4 border-[#1A1A1A] px-6 py-3 text-[10px] font-black uppercase bg-[#1A1A1A] text-white hover:bg-white hover:text-[#1A1A1A] transition-all"
+            >
+              ⚡ Abordar Desafío →
+            </button>
           )
         )}
       </div>
@@ -224,7 +216,7 @@ const SeccionTransbordos = ({ rutas }) => (
 const InicioLoggeado = ({ setIsLogged }) => {
   const navigate = useNavigate();
   const { rutaActiva, despacharRutaActiva } = useEstacion();
-  const { ganarXP, desafioActivo } = usePerfil();
+  const { ganarXP, desafioActivo, xp, nivel } = usePerfil();
   const [rutas, setRutas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [filtro, setFiltro] = useState('TODAS');
@@ -274,6 +266,11 @@ const InicioLoggeado = ({ setIsLogged }) => {
     .filter(r => r.nombre.toLowerCase().includes(busqueda.toLowerCase()))
     .sort((a, b) => {
       if (filtro === 'MÁS_VOTADAS') return (b.pasajeros || 0) - (a.pasajeros || 0);
+      if (filtro === 'MÁS_CORTAS') {
+        const kmA = (a.estaciones || []).reduce((s, e) => s + (e.paginas || 0), 0);
+        const kmB = (b.estaciones || []).reduce((s, e) => s + (e.paginas || 0), 0);
+        return kmA - kmB;
+      }
       return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
     });
 
@@ -326,8 +323,8 @@ const InicioLoggeado = ({ setIsLogged }) => {
           <div className="grid grid-cols-1 md:grid-cols-4 border-4 border-[#1A1A1A] bg-[#222] mb-24 shadow-[10px_10px_0px_0px_#FF5F00]">
             <div className="p-8 border-r-2 border-white/5"><FlapStat label="Total_Abordajes" value={totalPasajeros} /></div>
             <div className="p-8 border-r-2 border-white/5"><FlapStat label="Líneas_Red" value={rutas.length} /></div>
-            <div className="p-8 border-r-2 border-white/5"><FlapStat label="Sync_Status" value="ONL" /></div>
-            <div className="p-8"><FlapStat label="Carga_Sistema" value="99" /></div>
+            <div className="p-8 border-r-2 border-white/5"><FlapStat label="Mi_XP" value={xp} /></div>
+            <div className="p-8"><FlapStat label="Mi_Nivel" value={({'TRAINEE':'TRN','PASAJERO':'PAS','CONDUCTOR':'CON','MAQUINISTA':'MAQ','MAQUINISTA_JEFE':'JEFE'})[nivel?.nombre] || 'TRN'} /></div>
           </div>
 
           <SeccionTransbordos rutas={rutas} />
@@ -338,6 +335,7 @@ const InicioLoggeado = ({ setIsLogged }) => {
               <div className="flex gap-2">
                 <button onClick={() => setFiltro('TODAS')} className={`px-6 py-2 font-black uppercase text-[10px] tracking-widest border-2 border-black transition-all ${filtro === 'TODAS' ? 'bg-black text-[#FF5F00]' : 'bg-white hover:bg-gray-100'}`}>01. Recientes</button>
                 <button onClick={() => setFiltro('MÁS_VOTADAS')} className={`px-6 py-2 font-black uppercase text-[10px] tracking-widest border-2 border-black transition-all ${filtro === 'MÁS_VOTADAS' ? 'bg-black text-[#FF5F00]' : 'bg-white hover:bg-gray-100'}`}>02. Mayor Tráfico</button>
+                <button onClick={() => setFiltro('MÁS_CORTAS')} className={`px-6 py-2 font-black uppercase text-[10px] tracking-widest border-2 border-black transition-all ${filtro === 'MÁS_CORTAS' ? 'bg-black text-[#FF5F00]' : 'bg-white hover:bg-gray-100'}`}>03. Más Cortas</button>
               </div>
               <div className="relative flex-grow max-w-md">
                 <input type="text" placeholder="BUSCAR_LÍNEA_ACTIVA..." value={busqueda} onChange={(e) => setBusqueda(e.target.value)} className="w-full bg-white border-2 border-black p-3 font-mono text-xs uppercase outline-none focus:ring-2 ring-[#FF5F00] placeholder:opacity-30" />

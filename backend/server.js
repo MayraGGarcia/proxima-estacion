@@ -5,7 +5,9 @@ require('dotenv').config();
 
 const { despacharRuta, obtenerMuro, abordarRuta, obtenerRutaPorId } = require('./controllers/rutaController');
 const { publicarRegistro, obtenerRegistrosPorRuta } = require('./controllers/registroController');
+const { crearResena, obtenerResenasPorLibro, obtenerResenasPorMaquinista, eliminarResena } = require('./controllers/resenaController');
 const { obtenerPerfil, sumarXP, obtenerDesafioActivo } = require('./controllers/perfilController');
+const PerfilUsuario = require('./models/PerfilUsuario');
 
 const app = express();
 app.use(cors());
@@ -33,6 +35,26 @@ app.post('/api/perfil/:maquinista/xp', sumarXP);
 
 // Desafíos
 app.get('/api/desafio/activo', obtenerDesafioActivo);
+
+// Reseñas de libros
+app.post('/api/resenas', crearResena);
+app.get('/api/resenas/libro/:libroTitulo', obtenerResenasPorLibro);
+app.get('/api/resenas/maquinista/:maquinista', obtenerResenasPorMaquinista);
+app.delete('/api/resenas/:libroTitulo/:maquinista', eliminarResena);
+
+// Reset de perfil (para testing)
+app.delete('/api/perfil/:maquinista/reset', async (req, res) => {
+  try {
+    await PerfilUsuario.findOneAndUpdate(
+      { maquinista: req.params.maquinista },
+      { xp: 0, logros: [], desafiosCompletados: [],
+        rutasCompletadas: 0, rutasAbordadas: 0, bitacorasEscritas: 0 }
+    );
+    res.json({ ok: true, mensaje: 'Perfil reseteado correctamente' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error al resetear perfil', error: err.message });
+  }
+});
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Terminal activa en puerto ${PORT}`));

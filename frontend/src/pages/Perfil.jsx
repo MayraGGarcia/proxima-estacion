@@ -29,8 +29,18 @@ const Perfil = () => {
   const { xp, nivel, logros, logrosNuevos } = usePerfil();
 
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
+  const [logrosExpanded, setLogrosExpanded] = useState(false);
+  const [verTodasResenas, setVerTodasResenas] = useState(false);
+  const [misResenas, setMisResenas] = useState([]);
 
   useEffect(() => { sincronizarTerminal(); }, []);
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/resenas/maquinista/ADMIN_01')
+      .then(r => r.json())
+      .then(data => setMisResenas(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
 
   const handleNuevaRutaDespachada = (rutaGuardada) => {
     despacharRutaActiva(rutaGuardada);
@@ -124,28 +134,98 @@ const Perfil = () => {
               </div>
 
               {/* LOGROS */}
-              <div className="border-4 border-[#1A1A1A] bg-white p-6 text-left shadow-[8px_8px_0px_0px_#1A1A1A]">
-                <h4 className="font-black uppercase text-xs mb-1 border-b-2 border-[#1A1A1A] pb-2 inline-block">Sellos de Estación</h4>
-                <p className="font-mono text-[8px] uppercase text-gray-400 mb-4">
-                  {logros.filter(l => l.desbloqueado).length}/{logros.length} desbloqueados
-                </p>
-                <div className="space-y-3">
-                  {logros.map((logro, i) => (
-                    <div key={i} className={`flex items-center gap-3 p-2 border-2 transition-all
-                      ${logro.desbloqueado
-                        ? 'border-[#1A1A1A] bg-[#FF5F00]/10'
-                        : 'border-[#1A1A1A]/20 opacity-40 grayscale'}`}>
-                      <span className="text-xl flex-shrink-0">{logro.icono}</span>
-                      <div className="min-w-0">
-                        <p className="font-black uppercase text-[10px] leading-none">{logro.nombre}</p>
-                        <p className="font-mono text-[8px] text-gray-400 uppercase truncate">{logro.descripcion}</p>
-                      </div>
-                      {logro.desbloqueado && (
-                        <span className="text-[#FF5F00] font-black text-xs flex-shrink-0">✓</span>
-                      )}
+              <div className="border-4 border-[#1A1A1A] bg-white text-left shadow-[8px_8px_0px_0px_#1A1A1A] overflow-hidden">
+                <button
+                  onClick={() => setLogrosExpanded(v => !v)}
+                  className="w-full p-6 flex items-center justify-between hover:bg-[#F5F5F5] transition-all"
+                >
+                  <div className="text-left">
+                    <h4 className="font-black uppercase text-xs leading-none">Sellos de Estación</h4>
+                    <p className="font-mono text-[8px] uppercase text-gray-400 mt-1">
+                      {logros.filter(l => l.desbloqueado).length}/{logros.length} desbloqueados
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex gap-1">
+                      {logros.filter(l => l.desbloqueado).map((l, i) => (
+                        <span key={i} className="text-base">{l.icono}</span>
+                      ))}
                     </div>
-                  ))}
+                    <span className={`font-black text-[#FF5F00] text-xs transition-transform duration-300 ${logrosExpanded ? 'rotate-180' : ''}`}>▼</span>
+                  </div>
+                </button>
+
+                <div className={`transition-all duration-300 ease-in-out overflow-hidden ${logrosExpanded ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div className="px-6 pb-6 space-y-3 border-t-2 border-dashed border-[#1A1A1A]/10 pt-4">
+                    {logros.map((logro, i) => (
+                      <div key={i} className={`flex items-center gap-3 p-2 border-2 transition-all
+                        ${logro.desbloqueado
+                          ? 'border-[#1A1A1A] bg-[#FF5F00]/10'
+                          : 'border-[#1A1A1A]/20 opacity-40 grayscale'}`}>
+                        <span className="text-xl flex-shrink-0">{logro.icono}</span>
+                        <div className="min-w-0">
+                          <p className="font-black uppercase text-[10px] leading-none">{logro.nombre}</p>
+                          <p className="font-mono text-[8px] text-gray-400 uppercase truncate">{logro.descripcion}</p>
+                        </div>
+                        {logro.desbloqueado && (
+                          <span className="text-[#FF5F00] font-black text-xs flex-shrink-0">✓</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
+              </div>
+
+              {/* TARJETA LIBROS LEÍDOS */}
+              <div className="border-4 border-[#1A1A1A] bg-white text-left shadow-[8px_8px_0px_0px_#1A1A1A] overflow-hidden">
+                <div className="p-5 border-b-2 border-dashed border-[#1A1A1A]/10 flex justify-between items-center">
+                  <div>
+                    <h4 className="font-black uppercase text-xs leading-none">Libros Leídos</h4>
+                    <p className="font-mono text-[8px] uppercase text-gray-400 mt-1">
+                      {misResenas.length} {misResenas.length === 1 ? 'reseña' : 'reseñas'}
+                    </p>
+                  </div>
+                  <span className="font-black text-3xl text-[#1A1A1A]/10">
+                    {String(misResenas.length).padStart(2,'0')}
+                  </span>
+                </div>
+
+                {misResenas.length === 0 ? (
+                  <div className="p-6 text-center">
+                    <p className="font-mono text-[8px] uppercase text-gray-400 opacity-60">Sin reseñas todavía</p>
+                  </div>
+                ) : (
+                  <div className="p-5">
+                    {/* 3 portadas con más estrellas */}
+                    <div className="flex gap-3 mb-4">
+                      {[...misResenas]
+                        .sort((a, b) => b.estrellas - a.estrellas)
+                        .slice(0, 3)
+                        .map((r, i) => (
+                          <button key={i}
+                            onClick={() => navigate(`/estacion/${encodeURIComponent(r.libroTitulo)}`, {
+                              state: { titulo: r.libroTitulo, autor: r.libroAutor, portada: r.libroPortada, paginas: r.libroPaginas, año: r.libroAño }
+                            })}
+                            className="group relative flex-1 bg-[#1A1A1A] border-4 border-[#1A1A1A] overflow-hidden hover:-translate-y-1 transition-transform shadow-[3px_3px_0px_0px_#FF5F00]"
+                            style={{ height: '90px' }}
+                            title={r.libroTitulo}>
+                            {r.libroPortada
+                              ? <img src={r.libroPortada} alt={r.libroTitulo} className="w-full h-full object-cover" />
+                              : <div className="w-full h-full flex items-center justify-center"><span className="text-[#FF5F00] font-black text-[8px]">?</span></div>
+                            }
+                            <div className="absolute bottom-0 inset-x-0 bg-black/70 py-1 flex justify-center">
+                              <span className="text-[#FF5F00] text-[8px]">{'★'.repeat(r.estrellas)}</span>
+                            </div>
+                          </button>
+                        ))}
+                    </div>
+                    <button
+                      onClick={() => navigate('/mis-resenas')}
+                      className="w-full border-4 border-[#1A1A1A] py-3 font-black uppercase text-[10px] bg-white hover:bg-[#FF5F00] transition-all shadow-[4px_4px_0px_0px_#1A1A1A] active:shadow-none">
+                      Ver Todos →
+                    </button>
+                  </div>
+                )}
               </div>
 
             </aside>
@@ -227,6 +307,8 @@ const Perfil = () => {
                   </div>
                 )}
               </div>
+
+
             </main>
           </div>
         </div>
@@ -241,8 +323,16 @@ const Perfil = () => {
               </div>
             </div>
             <button
-              onClick={() => { localStorage.clear(); window.location.reload(); }}
-              className="text-[9px] font-mono uppercase opacity-30 hover:opacity-100 transition-opacity border border-white/20 px-4 py-2">
+              onClick={async () => {
+                if (!window.confirm('¿Resetear todo el progreso? XP, logros y desafíos se borrarán.')) return;
+                try {
+                  await fetch('http://localhost:5000/api/perfil/ADMIN_01/reset', { method: 'DELETE' });
+                } catch (e) { console.error('Error al resetear perfil:', e); }
+                sessionStorage.clear();
+                localStorage.clear();
+                window.location.reload();
+              }}
+              className="text-[9px] font-mono uppercase opacity-30 hover:opacity-100 hover:text-red-400 transition-all border border-white/20 px-4 py-2">
               [ Hard_Reset_Terminal ]
             </button>
           </div>

@@ -13,7 +13,7 @@ const RutaActiva = () => {
   const [comentario, setComentario] = useState('');
   const [reporteFinal, setReporteFinal] = useState('');
 
-  // Inicializar estaciones desde el context 
+  // Inicializar estaciones desde el context (ya trae el progreso guardado)
   const [estacionesLocales, setEstacionesLocales] = useState(
     rutaActiva ? rutaActiva.estaciones : []
   );
@@ -214,7 +214,23 @@ const RutaActiva = () => {
                   {rutaFinalizada ? "FIN DEL VIAJE" : estacionActual?.titulo}
                 </h2>
                 {!rutaFinalizada && (
-                  <p className="text-xl font-bold uppercase italic text-[#FF5F00]">{estacionActual?.autor}</p>
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <p className="text-xl font-bold uppercase italic text-[#FF5F00]">{estacionActual?.autor}</p>
+                    <button
+                      onClick={() => navigate(`/estacion/${encodeURIComponent(estacionActual?.titulo)}`, {
+                        state: {
+                          titulo: estacionActual?.titulo,
+                          autor: estacionActual?.autor,
+                          portada: estacionActual?.portada,
+                          paginas: estacionActual?.paginas,
+                          año: estacionActual?.año
+                        }
+                      })}
+                      className="border-2 border-[#1A1A1A] px-4 py-2 font-black uppercase text-[9px] hover:bg-[#FF5F00] transition-all bg-white shadow-[3px_3px_0px_0px_#1A1A1A] active:shadow-none"
+                    >
+                      Ver Ficha →
+                    </button>
+                  </div>
                 )}
               </div>
 

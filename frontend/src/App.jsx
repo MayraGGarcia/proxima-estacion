@@ -9,6 +9,8 @@ import Auth from './pages/Auth';
 import Perfil from './pages/Perfil';
 import RutaActiva from './pages/RutaActiva';
 import MuroEstaciones from './pages/MuroEstaciones';
+import FichaEstacion from './pages/FichaEstacion';
+import MisResenas from './pages/MisResenas';
 
 function App() {
   const [isLogged, setIsLogged] = useState(false); 
@@ -39,6 +41,8 @@ function App() {
           <Route path="/ruta/activa" element={isLogged ? <RutaActiva /> : <Navigate to="/auth" />} />
           <Route path="/muro" element={<MuroEstaciones />} />
           <Route path="/muro/:rutaId" element={<MuroEstaciones />} />
+          <Route path="/estacion/:libroTitulo" element={<FichaEstacion />} />
+          <Route path="/mis-resenas" element={<MisResenas />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Router>

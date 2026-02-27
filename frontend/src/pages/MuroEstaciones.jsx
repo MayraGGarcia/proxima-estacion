@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useEstacion } from '../context/EstacionContext';
 
 const PortadaEstacion = ({ est }) => {
@@ -29,6 +29,7 @@ const PortadaEstacion = ({ est }) => {
 };
 
 const BitacoraRuta = ({ rutaId }) => {
+  const navigate = useNavigate();
   const { rutas, historial, reportes } = useEstacion();
   const [registrosBackend, setRegistrosBackend] = useState([]);
 
@@ -105,7 +106,17 @@ const BitacoraRuta = ({ rutaId }) => {
                   <div key={i} className="p-6 flex gap-6">
                     <PortadaEstacion est={bit} />
                     <div className="flex-grow">
-                      <p className="font-black uppercase text-sm mb-1">{bit.estacionTitulo}</p>
+                      <div className="flex justify-between items-start gap-2 mb-1">
+                        <p className="font-black uppercase text-sm">{bit.estacionTitulo}</p>
+                        <button
+                          onClick={() => navigate(`/estacion/${encodeURIComponent(bit.estacionTitulo)}`, {
+                            state: { titulo: bit.estacionTitulo, autor: bit.estacionAutor, portada: bit.portada }
+                          })}
+                          className="flex-shrink-0 border-2 border-[#1A1A1A] px-3 py-1 font-black uppercase text-[8px] hover:bg-[#FF5F00] transition-all bg-white shadow-[2px_2px_0px_0px_#1A1A1A] active:shadow-none"
+                        >
+                          Ver Ficha →
+                        </button>
+                      </div>
                       <p className="font-mono text-[9px] text-gray-400 uppercase mb-4">{bit.estacionAutor}</p>
                       <div className="bg-[#F5F5F5] border-l-4 border-[#FF5F00] p-4 text-xs italic font-bold">
                         "{bit.texto || 'Sin comentarios en esta estación.'}"
