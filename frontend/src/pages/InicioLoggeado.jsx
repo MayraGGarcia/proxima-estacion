@@ -214,6 +214,7 @@ const SeccionTransbordos = ({ rutas }) => (
 
 // --- [COMPONENTE PRINCIPAL]: INICIO LOGGEADO ---
 const InicioLoggeado = ({ setIsLogged }) => {
+  const maquinista = sessionStorage.getItem('maquinista') || 'MAQUINISTA';
   const navigate = useNavigate();
   const { rutaActiva, despacharRutaActiva } = useEstacion();
   const { ganarXP, desafioActivo, xp, nivel } = usePerfil();
@@ -308,7 +309,7 @@ const InicioLoggeado = ({ setIsLogged }) => {
             >
               {/* Símbolo con animación de parpadeo */}
               <span className="text-[#FF5F00] font-mono animate-pulse tracking-tighter">[ o ]</span>
-              Terminal Personal // ID
+              Terminal Personal // {maquinista}
             </Link>
             <button onClick={() => setIsLogged(false)} className="w-10 h-10 border-2 border-black hover:bg-black hover:text-white font-black transition-colors">✕</button>
           </div>
@@ -390,29 +391,21 @@ const InicioLoggeado = ({ setIsLogged }) => {
           </section>
         </main>
 
-        <footer className="bg-[#1A1A1A] text-white p-16 border-t-8 border-[#FF5F00] relative overflow-hidden">
-          <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-16 relative z-10 text-left">
-            <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-[#FF5F00] text-black flex items-center justify-center font-black">P</div>
-                <h4 className="font-black text-3xl uppercase italic tracking-tighter">Próxima Estación</h4>
+        <footer className="bg-[#1A1A1A] text-white border-t-4 border-[#FF5F00] px-8 py-8">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 bg-[#FF5F00] flex items-center justify-center text-white font-black text-sm uppercase">P</div>
+              <div>
+                <span className="font-black uppercase tracking-tighter text-2xl block leading-none">Próxima Estación</span>
+                <span className="font-mono text-[8px] uppercase tracking-widest opacity-40 italic">Terminal Global // 2026</span>
               </div>
-              <p className="text-[10px] font-mono text-gray-500 uppercase tracking-[0.2em] leading-relaxed">Protocolo de sincronización descentralizada // Despachando conocimiento desde el subsuelo digital.</p>
+              <span className="text-gray-700 ml-4">·</span>
+              <Link to="/perfil" className="font-mono text-[10px] uppercase text-gray-500 hover:text-[#FF5F00] transition-colors tracking-widest">Perfil</Link>
             </div>
-            <div className="flex flex-col gap-4">
-              <span className="font-black uppercase text-xs text-[#FF5F00] tracking-[0.4em]">Monitor_Vías</span>
-              <div className="grid grid-cols-4 gap-2">
-                {[...Array(8)].map((_, i) => <div key={i} className={`h-1 w-full bg-[#FF5F00] ${i < 6 ? 'animate-pulse' : 'opacity-20'}`}></div>)}
-              </div>
-            </div>
-            <div className="flex flex-col justify-between items-end">
-              <nav className="flex flex-col items-end gap-3 text-right">
-                <Link to="/perfil" className="text-xs font-black uppercase hover:text-[#FF5F00]">Configurar Terminal</Link>
-                <Link to="/muro" className="text-xs font-black uppercase hover:text-[#FF5F00]">Mapa de la Red</Link>
-              </nav>
-              <div className="mt-12">
-                <span className="text-[10px] font-mono text-gray-600 uppercase block tracking-widest">© 2026 // BY_MGG_DEV</span>
-              </div>
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-[10px] uppercase text-gray-500 tracking-widest">{maquinista}</span>
+              <span className="text-gray-700">·</span>
+              <span className="font-mono text-[10px] uppercase text-gray-600 tracking-widest">2026</span>
             </div>
           </div>
         </footer>

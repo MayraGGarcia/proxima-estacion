@@ -46,4 +46,34 @@ const obtenerRegistrosPorRuta = async (req, res) => {
   }
 };
 
-module.exports = { publicarRegistro, obtenerRegistrosPorRuta };
+// Obtener todos los registros de un maquinista (para el historial del perfil)
+const obtenerRegistrosPorMaquinista = async (req, res) => {
+  try {
+    const { maquinista } = req.params;
+    const registros = await Registro.find({ maquinista })
+      .populate('rutaId', 'nombre estaciones')
+      .sort({ fechaFinalizacion: -1 });
+
+    const historial = registros.map(r => ({
+      id: r._id,
+      titulo: r.rutaId?.nombre || 'Ruta eliminada',
+      estaciones: (r.rutaId?.estaciones || []).map((e, i) => ({
+        titulo: e.titulo,
+        autor: e.autor,
+        portada: e.portada,
+        paginas: e.paginas,
+        año: e.año,
+        completada: true,
+        bitacora: r.bitacoras[i]?.texto || ''
+      })),
+      reporteFinal: r.reporteFinal,
+      fechaFinalizacion: r.fechaFinalizacion
+    }));
+
+    res.json(historial);
+  } catch (error) {
+    res.status(500).json({ message: "Error al obtener historial", error: error.message });
+  }
+};
+
+module.exports = { publicarRegistro, obtenerRegistrosPorRuta, obtenerRegistrosPorMaquinista };

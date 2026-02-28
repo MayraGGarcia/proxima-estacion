@@ -60,12 +60,15 @@ const BitacoraRuta = ({ rutaId }) => {
     let lista = [...registrosBackend];
 
     if (local) {
-      const contenidoLocal = local.extracto || local.reporteFinal;
+      const contenidoLocalRaw = local.extracto || local.reporteFinal;
+      const contenidoLocal = typeof contenidoLocalRaw === 'object' && contenidoLocalRaw !== null
+        ? (contenidoLocalRaw.extracto || contenidoLocalRaw.texto || '')
+        : (contenidoLocalRaw || '');
       lista = lista.filter(r => r.reporteFinal !== contenidoLocal);
       
       lista.unshift({
         _id: local.id,
-        maquinista: 'ADMIN_01 (LOCAL)',
+        maquinista: `${sessionStorage.getItem('maquinista') || 'ANONIMO'} (LOCAL)`,
         fechaFinalizacion: local.fecha,
         reporteFinal: contenidoLocal,
         bitacoras: (local.estaciones || []).map(e => ({
@@ -98,7 +101,7 @@ const BitacoraRuta = ({ rutaId }) => {
             <div key={idx} className="border-4 border-black bg-white shadow-[10px_10px_0px_0px_#1A1A1A]">
               <div className="bg-black p-4 flex justify-between items-center text-white">
                 <span className="font-black uppercase italic">{reg.maquinista}</span>
-                <span className="font-mono text-[10px] opacity-50">{reg.fechaFinalizacion}</span>
+                <span className="font-mono text-[10px] opacity-50">{reg.fechaFinalizacion ? new Date(reg.fechaFinalizacion).toLocaleDateString("es-AR") : ""}</span>
               </div>
               
               <div className="divide-y-2 divide-black/5">

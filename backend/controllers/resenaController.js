@@ -5,14 +5,14 @@ const crearResena = async (req, res) => {
   try {
     const { libroTitulo, libroAutor, libroPortada, libroPaginas, libroAño, maquinista, estrellas, texto } = req.body;
 
-    if (!libroTitulo || !libroAutor || !maquinista || !estrellas || !texto) {
+    if (!libroTitulo || !maquinista || !estrellas || !texto) {
       return res.status(400).json({ message: 'Faltan campos obligatorios' });
     }
 
     const resena = await Resena.findOneAndUpdate(
       { libroTitulo, maquinista },
       { libroTitulo, libroAutor, libroPortada, libroPaginas, libroAño, maquinista, estrellas, texto },
-      { new: true, upsert: true, runValidators: true }
+      { returnDocument: 'after', upsert: true, runValidators: true }
     );
 
     res.status(201).json(resena);

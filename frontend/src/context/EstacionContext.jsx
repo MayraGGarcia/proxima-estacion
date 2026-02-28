@@ -2,13 +2,18 @@ import React, { createContext, useState, useContext, useEffect, useMemo } from '
 
 const EstacionContext = createContext();
 
-export const EstacionProvider = ({ children }) => {
+export const EstacionProvider = ({ children, maquinista }) => {
   const [rutas, setRutas] = useState([]);
   const [cargando, setCargando] = useState(true);
 
+  // Claves de sessionStorage personalizadas por usuario
+  const KEY_RUTA   = maquinista ? `rutaActiva_${maquinista}` : 'rutaActiva';
+  const KEY_REP    = maquinista ? `reportes_${maquinista}`   : 'reportes';
+  const KEY_HIST   = maquinista ? `historial_${maquinista}`  : 'historial';
+
   const [rutaActiva, setRutaActiva] = useState(() => {
     try {
-      const guardada = sessionStorage.getItem('rutaActiva');
+      const guardada = sessionStorage.getItem(KEY_RUTA);
       const rutaRecuperada = guardada ? JSON.parse(guardada) : null;
       if (!rutaRecuperada) localStorage.removeItem('ruta_en_perfil');
       return rutaRecuperada;
@@ -17,17 +22,56 @@ export const EstacionProvider = ({ children }) => {
 
   const [reportes, setReportes] = useState(() => {
     try {
-      const guardados = sessionStorage.getItem('reportes');
-      return guardados ? JSON.parse(guardados) : [];
+      const guardados = sessionStorage.getItem(KEY_REP);
+      const parsed = guardados ? JSON.parse(guardados) : [];
+
+      return parsed.map(r => ({
+        ...r,
+        reporteFinal: typeof r.reporteFinal === 'object' && r.reporteFinal !== null
+          ? (r.reporteFinal.extracto || r.reporteFinal.texto || '')
+          : (r.reporteFinal || r.extracto || '')
+      }));
     } catch { return []; }
   });
 
   const [historial, setHistorial] = useState(() => {
     try {
-      const guardado = sessionStorage.getItem('historial');
+      const guardado = sessionStorage.getItem(KEY_HIST);
       return guardado ? JSON.parse(guardado) : [];
     } catch { return []; }
   });
+
+  // Cuando cambia el maquinista, recargar datos del nuevo usuario
+  useEffect(() => {
+    if (!maquinista) return;
+    // Ruta activa desde sessionStorage
+    try {
+      const ruta = sessionStorage.getItem(KEY_RUTA);
+      setRutaActiva(ruta ? JSON.parse(ruta) : null);
+      const rep = sessionStorage.getItem(KEY_REP);
+      const parsedRep = rep ? JSON.parse(rep) : [];
+      setReportes(parsedRep.map(r => ({
+        ...r,
+        reporteFinal: typeof r.reporteFinal === 'object' && r.reporteFinal !== null
+          ? (r.reporteFinal.extracto || r.reporteFinal.texto || '')
+          : (r.reporteFinal || r.extracto || '')
+      })));
+    } catch { }
+
+    // Historial desde el backend (persiste entre sesiones)
+    fetch(`http://localhost:5000/api/registros/maquinista/${maquinista}`)
+      .then(r => r.json())
+      .then(data => {
+        if (Array.isArray(data)) setHistorial(data);
+      })
+      .catch(() => {
+        // Fallback a sessionStorage si el backend falla
+        try {
+          const hist = sessionStorage.getItem(KEY_HIST);
+          setHistorial(hist ? JSON.parse(hist) : []);
+        } catch { }
+      });
+  }, [maquinista]);
 
   const sincronizarTerminal = async () => {
     try {
@@ -46,21 +90,16 @@ export const EstacionProvider = ({ children }) => {
 
   useEffect(() => {
     if (rutaActiva) {
-      sessionStorage.setItem('rutaActiva', JSON.stringify(rutaActiva));
+      sessionStorage.setItem(KEY_RUTA, JSON.stringify(rutaActiva));
       localStorage.setItem('ruta_en_perfil', JSON.stringify({ id: rutaActiva.id, completada: false }));
     } else {
-      sessionStorage.removeItem('rutaActiva');
+      sessionStorage.removeItem(KEY_RUTA);
       localStorage.removeItem('ruta_en_perfil');
     }
   }, [rutaActiva]);
 
-  useEffect(() => {
-    sessionStorage.setItem('reportes', JSON.stringify(reportes));
-  }, [reportes]);
-
-  useEffect(() => {
-    sessionStorage.setItem('historial', JSON.stringify(historial));
-  }, [historial]);
+  useEffect(() => { sessionStorage.setItem(KEY_REP, JSON.stringify(reportes)); }, [reportes]);
+  useEffect(() => { sessionStorage.setItem(KEY_HIST, JSON.stringify(historial)); }, [historial]);
 
   const despacharRutaActiva = (rutaDespachada) => {
     const nuevaRutaActiva = {
@@ -68,61 +107,58 @@ export const EstacionProvider = ({ children }) => {
       titulo: rutaDespachada.nombre,
       pasajeros: rutaDespachada.pasajeros || 1,
       estaciones: rutaDespachada.estaciones.map((est, i) => ({
-        ...est,
-        id: est._id || `est-${i}`,
-        // Unificamos el campo de imagen al despachar
-        portada: est.portada || est.imagen, 
+        id: `est-${i}`,
+        titulo: est.titulo,
+        autor: est.autor,
+        paginas: est.paginas,
+        año: est.año,
+        portada: est.portada,
         completada: false,
         bitacora: ''
-      })),
-      criterio: rutaDespachada.configuracion?.metodo || 'Manual',
-      fechaInicio: new Date().toISOString()
+      }))
     };
     setRutaActiva(nuevaRutaActiva);
   };
 
   const guardarProgreso = (estacionesActualizadas) => {
-    setRutaActiva(prev => prev ? ({ ...prev, estaciones: estacionesActualizadas }) : null);
+    if (!rutaActiva) return;
+    setRutaActiva(prev => ({ ...prev, estaciones: estacionesActualizadas }));
   };
 
   const finalizarRuta = (reporte) => {
-    const nombreRuta = reporte.ruta || rutaActiva?.titulo || "Línea_Privada";
-    
-    // Normalizamos estaciones para el reporte final (incluyendo portadas)
-    const estacionesFinales = (reporte.estaciones || rutaActiva?.estaciones || []).map(e => ({
-      ...e,
-      portada: e.portada || e.imagen
-    }));
-
-    const nuevoReporte = { 
-      ...reporte, 
-      ruta: nombreRuta,
-      estaciones: estacionesFinales 
-    };
-    setReportes(prev => [nuevoReporte, ...prev]);
-
+    if (!rutaActiva) return;
     const entradaHistorial = {
-      id: reporte.id || rutaActiva?.id,
-      titulo: nombreRuta,
-      fecha: reporte.fecha || new Date().toISOString(),
-      estaciones: estacionesFinales,
-      extracto: reporte.extracto,
-      progreso: 100,
-      estado: 'Finalizada'
+      id: rutaActiva.id,
+      titulo: rutaActiva.titulo,
+      estaciones: rutaActiva.estaciones,
+      reporte
     };
-    setHistorial(prev => [entradaHistorial, ...prev].slice(0, 2));
-
+    setHistorial(prev => [entradaHistorial, ...prev].slice(0, 50));
+    setReportes(prev => [
+      {
+        id: rutaActiva.id,
+        nombre: rutaActiva.titulo,
+        ruta: rutaActiva.titulo,
+        estaciones: rutaActiva.estaciones,
+        reporteFinal: reporte,
+        maquinista: maquinista || 'ANONIMO',
+        bitacoras: rutaActiva.estaciones.map(e => ({
+          estacionTitulo: e.titulo,
+          estacionAutor: e.autor,
+          portada: e.portada,
+          texto: e.bitacora || ''
+        }))
+      },
+      ...prev
+    ]);
     setRutaActiva(null);
-    sincronizarTerminal();
   };
 
-  const abandonarRuta = () => setRutaActiva(null);
+  const abandonarRuta = () => { setRutaActiva(null); };
 
   const stats = useMemo(() => ({
-    totalLineas: rutas.length,
     totalPasajeros: rutas.reduce((acc, r) => acc + (r.pasajeros || 0), 0),
-    kilometrosTotales: rutas.reduce((acc, r) =>
-      acc + (r.estaciones?.reduce((sum, e) => sum + (e.paginas || 0), 0) || 0), 0)
+    totalRutas: rutas.length
   }), [rutas]);
 
   return (
@@ -136,8 +172,4 @@ export const EstacionProvider = ({ children }) => {
   );
 };
 
-export const useEstacion = () => {
-  const context = useContext(EstacionContext);
-  if (!context) throw new Error("useEstacion debe usarse dentro de un EstacionProvider");
-  return context;
-};
+export const useEstacion = () => useContext(EstacionContext);

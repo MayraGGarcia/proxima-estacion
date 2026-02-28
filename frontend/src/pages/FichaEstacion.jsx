@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 
-const MAQUINISTA = 'ADMIN_01';
+const MAQUINISTA = sessionStorage.getItem('maquinista') || 'ANONIMO';
 
 // --- COMPONENTE DE ESTRELLAS ---
 const Estrellas = ({ valor, onChange = null, size = 'normal' }) => {
@@ -71,6 +71,7 @@ const FichaEstacion = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Datos del libro pueden venir por state o se reconstruyen desde la URL
   const libroDesdeState = location.state || {};
 
   const [libro, setLibro] = useState({
@@ -127,23 +128,28 @@ const FichaEstacion = () => {
     setEnviando(true);
     setErrorForm('');
     try {
+      const payload = {
+        libroTitulo: libro.titulo,
+        libroAutor: libro.autor || 'Desconocido',
+        libroPortada: libro.portada,
+        libroPaginas: libro.paginas,
+        libroAño: libro.año,
+        maquinista: MAQUINISTA,
+        estrellas,
+        texto: texto.trim()
+      };
+      console.log('[FichaEstacion] Enviando reseña:', payload);
       const res = await fetch('http://localhost:5000/api/resenas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          libroTitulo: libro.titulo,
-          libroAutor: libro.autor,
-          libroPortada: libro.portada,
-          libroPaginas: libro.paginas,
-          libroAño: libro.año,
-          maquinista: MAQUINISTA,
-          estrellas,
-          texto: texto.trim()
-        })
+        body: JSON.stringify(payload)
       });
-      if (!res.ok) throw new Error('Error al guardar');
+      const data = await res.json();
+      console.log('[FichaEstacion] Respuesta backend:', res.status, data);
+      if (!res.ok) throw new Error(data.message || 'Error al guardar');
       await cargarResenas();
     } catch (err) {
+      console.error('[FichaEstacion] Error:', err);
       setErrorForm('No se pudo guardar la reseña. Intentá de nuevo.');
     } finally {
       setEnviando(false);

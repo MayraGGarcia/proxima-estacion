@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-const MAQUINISTA = 'ADMIN_01';
+const MAQUINISTA = sessionStorage.getItem('maquinista') || 'ANONIMO';
 
 const Estrellas = ({ valor, onChange = null, size = 'normal' }) => {
   const [hover, setHover] = useState(0);
@@ -160,7 +160,7 @@ const MisResenas = () => {
         {/* CABECERA */}
         <header className="mb-12 border-b-4 border-[#1A1A1A] pb-8">
           <span className="bg-[#FF5F00] text-black px-2 py-1 text-[9px] font-mono uppercase tracking-[0.2em] mb-3 inline-block">
-            Bitácora_Personal
+            Registro_Personal
           </span>
           <div className="flex items-end justify-between">
             <h1 className="text-6xl md:text-7xl font-black uppercase tracking-tighter leading-[0.85]">
@@ -179,7 +179,7 @@ const MisResenas = () => {
             <div className="border-4 border-[#1A1A1A] bg-white shadow-[12px_12px_0px_0px_#1A1A1A] sticky top-8">
               <div className="bg-[#1A1A1A] px-6 py-3 border-b-4 border-[#FF5F00]">
                 <span className="text-[#FF5F00] font-mono text-[10px] uppercase tracking-widest">
-                  Terminal_Búsqueda
+                  Buscador
                 </span>
               </div>
               <div className="p-6">

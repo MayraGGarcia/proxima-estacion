@@ -26,7 +26,7 @@ const ToastLogro = ({ logros, onClose }) => {
 const Perfil = () => {
   const navigate = useNavigate();
   const { rutaActiva, despacharRutaActiva, sincronizarTerminal, historial } = useEstacion();
-  const { xp, nivel, logros, logrosNuevos } = usePerfil();
+  const { xp, nivel, logros, logrosNuevos, maquinista } = usePerfil();
 
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [logrosExpanded, setLogrosExpanded] = useState(false);
@@ -36,7 +36,7 @@ const Perfil = () => {
   useEffect(() => { sincronizarTerminal(); }, []);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/resenas/maquinista/ADMIN_01')
+    fetch(`http://localhost:5000/api/resenas/maquinista/${sessionStorage.getItem('maquinista') || 'ANONIMO'}`)
       .then(r => r.json())
       .then(data => setMisResenas(Array.isArray(data) ? data : []))
       .catch(() => {});
@@ -61,10 +61,12 @@ const Perfil = () => {
     isActiva: true
   } : null;
 
+  const historialLimitado = historial.slice(0, 3);
   const listaCompleta = [
     ...(entradaActiva ? [entradaActiva] : []),
-    ...historial
+    ...historialLimitado
   ];
+  const hayMasHistorial = historial.length > 3;
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white overflow-x-hidden relative">
@@ -92,10 +94,10 @@ const Perfil = () => {
               {/* TARJETA DE USUARIO */}
               <div className="bg-[#E8E4D9] text-[#1A1A1A] p-8 border-4 border-[#1A1A1A] shadow-[12px_12px_0px_0px_#1A1A1A] text-left sticky top-8">
                 <div className="w-24 h-24 bg-[#1A1A1A] mb-6 flex items-center justify-center border-4 border-[#FF5F00] shadow-lg rotate-3">
-                  <span className="text-4xl font-black text-[#FF5F00]">A1</span>
+                  <span className="text-4xl font-black text-[#FF5F00]">{(maquinista || "??").slice(0,2)}</span>
                 </div>
-                <h2 className="text-3xl font-black uppercase leading-none mb-1 italic tracking-tighter">Admin_01</h2>
-                <p className="font-mono text-[10px] uppercase text-[#1A1A1A]/50 tracking-widest mb-1">ID_PASAJERO: 2026-BA-8821</p>
+                <h2 className="text-3xl font-black uppercase leading-none mb-1 italic tracking-tighter">{maquinista}</h2>
+                <p className="font-mono text-[10px] uppercase text-[#1A1A1A]/50 tracking-widest mb-1">ID_Maquinista: {maquinista}</p>
 
                 {/* RANGO Y XP */}
                 {nivel && (
@@ -233,7 +235,7 @@ const Perfil = () => {
             {/* COLUMNA DERECHA */}
             <main className="lg:w-2/3 text-left">
               <header className="mb-12">
-                <span className="bg-[#1A1A1A] text-white px-2 py-1 text-[9px] font-mono uppercase tracking-[0.2em] mb-4 inline-block">User_Personal_Dashboard</span>
+                <span className="bg-[#1A1A1A] text-white px-2 py-1 text-[9px] font-mono uppercase tracking-[0.2em] mb-4 inline-block">Panel_Personal</span>
                 <h1 className="text-6xl md:text-7xl font-black uppercase tracking-tighter leading-[0.85]">
                   Mi Libreta de <br /> <span className="text-[#FF5F00]">Pasajes</span>.
                 </h1>
@@ -271,7 +273,7 @@ const Perfil = () => {
                       <div className="flex items-center gap-2 mb-2">
                         <div className={`w-2 h-2 ${r.isActiva ? 'bg-[#FF5F00] animate-pulse' : 'bg-green-600'}`}></div>
                         <span className="font-mono text-[9px] font-black uppercase tracking-widest">
-                          {r.isActiva ? 'Línea_En_Tránsito' : 'Línea_Finalizada'}
+                          {r.isActiva ? 'Línea_En_Curso' : 'Línea_Completada'}
                         </span>
                       </div>
                       <h4 className="text-3xl font-black uppercase italic leading-none mb-2">{r.titulo}</h4>
@@ -306,6 +308,19 @@ const Perfil = () => {
                     No hay registros en la libreta
                   </div>
                 )}
+
+                {hayMasHistorial && (
+                  <div className="text-center pt-4 border-t-2 border-dashed border-[#1A1A1A]/10">
+                    <p className="font-mono text-[9px] uppercase text-gray-400 mb-3">
+                      +{historial.length - 3} rutas más en el historial
+                    </p>
+                    <button
+                      onClick={() => navigate('/historial')}
+                      className="border-4 border-[#1A1A1A] px-8 py-3 font-black uppercase text-[10px] bg-white hover:bg-[#1A1A1A] hover:text-white transition-all shadow-[4px_4px_0px_0px_#1A1A1A] active:shadow-none">
+                      Ver Todo el Historial →
+                    </button>
+                  </div>
+                )}
               </div>
 
 
@@ -319,21 +334,21 @@ const Perfil = () => {
               <div className="w-10 h-10 bg-[#FF5F00] flex items-center justify-center text-white font-black text-sm uppercase">P</div>
               <div>
                 <span className="font-black uppercase tracking-tighter text-2xl block leading-none">Próxima Estación</span>
-                <span className="font-mono text-[8px] uppercase tracking-widest opacity-40 italic">Global Terminal // 2026</span>
+                <span className="font-mono text-[8px] uppercase tracking-widest opacity-40 italic">Terminal Global // 2026</span>
               </div>
             </div>
             <button
               onClick={async () => {
                 if (!window.confirm('¿Resetear todo el progreso? XP, logros y desafíos se borrarán.')) return;
                 try {
-                  await fetch('http://localhost:5000/api/perfil/ADMIN_01/reset', { method: 'DELETE' });
+                  await fetch(`http://localhost:5000/api/perfil/${sessionStorage.getItem('maquinista')}/reset`, { method: 'DELETE' });
                 } catch (e) { console.error('Error al resetear perfil:', e); }
                 sessionStorage.clear();
                 localStorage.clear();
                 window.location.reload();
               }}
               className="text-[9px] font-mono uppercase opacity-30 hover:opacity-100 hover:text-red-400 transition-all border border-white/20 px-4 py-2">
-              [ Hard_Reset_Terminal ]
+              [ Reinicio_Total ]
             </button>
           </div>
         </footer>

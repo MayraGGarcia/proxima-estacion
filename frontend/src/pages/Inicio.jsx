@@ -64,23 +64,33 @@ const Inicio = ({ isLogged, lineas, lineasAleatorias, barajarLineas }) => {
             </div>
             
             <div className="lg:col-span-4 w-full self-center">
-              <div className="border-4 border-[#1A1A1A] p-6 bg-white shadow-[15px_15px_0px_0px_#1A1A1A]">
-                <div className="flex justify-between items-center mb-4 border-b-2 border-[#1A1A1A] pb-2 font-mono text-[10px] font-bold text-[#1A1A1A]">
-                  <span>ESTADO_RED</span>
-                  <span className="w-3 h-3 bg-green-500 animate-pulse"></span>
+              <div className="border-4 border-[#1A1A1A] bg-white shadow-[15px_15px_0px_0px_#1A1A1A]">
+                {/* CABECERA */}
+                <div className="bg-[#1A1A1A] px-5 py-3 flex justify-between items-center">
+                  <span className="font-mono text-[10px] font-black uppercase tracking-widest text-[#FF5F00]">Estado_Red</span>
+                  <span className="w-2 h-2 bg-green-400 animate-pulse rounded-full"></span>
                 </div>
-                <div className="space-y-4 font-mono text-[#1A1A1A]">
-                  <div className="border-b border-gray-100 pb-2">
-                    <p className="text-[9px] opacity-50 uppercase tracking-tighter">Terminal_Actual</p>
-                    <p className="text-lg font-black uppercase truncate">CENTRAL_EST_2026</p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-center">
-                    <div className="bg-gray-100 p-2"><p className="text-[9px] opacity-50">NIVEL</p><p className="font-bold">01</p></div>
-                    <div className="bg-gray-100 p-2"><p className="text-[9px] opacity-50">ESTADO</p><p className="font-bold uppercase">Activo</p></div>
-                  </div>
-                  <div className="bg-[#1A1A1A] text-[#FF5F00] p-3 text-center text-[10px] font-black animate-pulse uppercase">
-                    Sincronizando datos...
-                  </div>
+                {/* RUTAS */}
+                <div className="divide-y-2 divide-[#1A1A1A]/5 font-mono">
+                  {[
+                    { nombre: "Línea Sci-Fi",        estado: "Disponible", libros: "06 estaciones" },
+                    { nombre: "Línea Boom Latino",    estado: "Disponible", libros: "05 estaciones" },
+                    { nombre: "Línea Distopía",       estado: "Disponible", libros: "04 estaciones" },
+                    { nombre: "Línea Noir",           estado: "Disponible", libros: "04 estaciones" },
+                  ].map((r, i) => (
+                    <div key={i} className="flex items-center justify-between px-5 py-3 hover:bg-orange-50 transition-colors">
+                      <div>
+                        <p className="font-black uppercase text-xs leading-none">{r.nombre}</p>
+                        <p className="text-[8px] uppercase text-gray-400 mt-0.5">{r.libros}</p>
+                      </div>
+                      <span className="text-[8px] uppercase font-black text-green-600 border border-green-200 px-2 py-0.5">{r.estado}</span>
+                    </div>
+                  ))}
+                </div>
+                {/* PIE */}
+                <div className="bg-[#1A1A1A] px-5 py-2 flex justify-between items-center">
+                  <span className="font-mono text-[8px] uppercase text-gray-500">Próxima Estación // 2026</span>
+                  <span className="font-mono text-[8px] uppercase text-[#FF5F00]">4 líneas activas</span>
                 </div>
               </div>
             </div>
@@ -110,25 +120,30 @@ const Inicio = ({ isLogged, lineas, lineasAleatorias, barajarLineas }) => {
           {/* MANUAL DE OPERACIONES */}
           <section className="mb-32">
             <div className="flex items-center gap-4 mb-12">
-                <h2 className="text-4xl font-black uppercase italic tracking-tighter">Manual de Operaciones</h2>
-                <div className="h-[2px] flex-grow bg-[#1A1A1A] opacity-20"></div>
+              <h2 className="text-4xl font-black uppercase italic tracking-tighter">Manual de Operaciones</h2>
+              <div className="h-[2px] flex-grow bg-[#1A1A1A] opacity-20"></div>
             </div>
-            <div className="grid md:grid-cols-3 gap-0 border-4 border-[#1A1A1A] bg-white shadow-[15px_15px_0px_0px_#1A1A1A]">
-                <div className="p-10 border-b-4 md:border-b-0 md:border-r-4 border-[#1A1A1A] hover:bg-orange-50 transition-colors group">
-                    <div className="w-12 h-12 bg-[#1A1A1A] text-white flex items-center justify-center font-black text-2xl mb-6 group-hover:bg-[#FF5F00] transition-colors">01</div>
-                    <h3 className="font-black uppercase text-2xl mb-4 leading-none text-[#1A1A1A]">Crea tu propia <br/> Red de lectura</h3>
-                    <p className="font-mono text-xs uppercase leading-relaxed text-gray-500">Define tus géneros favoritos como líneas de transporte personalizadas.</p>
-                </div>
-                <div className="p-10 border-b-4 md:border-b-0 md:border-r-4 border-[#1A1A1A] hover:bg-orange-50 transition-colors group">
-                    <div className="w-12 h-12 bg-[#1A1A1A] text-white flex items-center justify-center font-black text-2xl mb-6 group-hover:bg-[#FF5F00] transition-colors">02</div>
-                    <h3 className="font-black uppercase text-2xl mb-4 leading-none text-[#1A1A1A]">Marca paradas <br/> en cada libro</h3>
-                    <p className="font-mono text-xs uppercase leading-relaxed text-gray-500">Cada título terminado es una estación conquistada en tu mapa literario.</p>
-                </div>
-                <div className="p-10 hover:bg-orange-50 transition-colors group">
-                    <div className="w-12 h-12 bg-[#1A1A1A] text-white flex items-center justify-center font-black text-2xl mb-6 group-hover:bg-[#FF5F00] transition-colors">03</div>
-                    <h3 className="font-black uppercase text-2xl mb-4 leading-none text-[#1A1A1A]">Visualiza tu <br/> progreso real</h3>
-                    <p className="font-mono text-xs uppercase leading-relaxed text-gray-500">Mira cómo crecen tus rutas a medida que avanzas por nuevas páginas.</p>
-                </div>
+            <div className="grid md:grid-cols-4 gap-0 border-4 border-[#1A1A1A] bg-white shadow-[15px_15px_0px_0px_#1A1A1A]">
+              <div className="p-8 border-b-4 md:border-b-0 md:border-r-4 border-[#1A1A1A] hover:bg-orange-50 transition-colors group">
+                <div className="w-12 h-12 bg-[#1A1A1A] text-white flex items-center justify-center font-black text-2xl mb-6 group-hover:bg-[#FF5F00] transition-colors">01</div>
+                <h3 className="font-black uppercase text-xl mb-3 leading-none text-[#1A1A1A]">Abordá <br/> una ruta</h3>
+                <p className="font-mono text-xs uppercase leading-relaxed text-gray-500">Elegís una línea temática — Sci-Fi, Boom Latino, Noir — y comenzás el viaje.</p>
+              </div>
+              <div className="p-8 border-b-4 md:border-b-0 md:border-r-4 border-[#1A1A1A] hover:bg-orange-50 transition-colors group">
+                <div className="w-12 h-12 bg-[#1A1A1A] text-white flex items-center justify-center font-black text-2xl mb-6 group-hover:bg-[#FF5F00] transition-colors">02</div>
+                <h3 className="font-black uppercase text-xl mb-3 leading-none text-[#1A1A1A]">Completá <br/> cada estación</h3>
+                <p className="font-mono text-xs uppercase leading-relaxed text-gray-500">Al terminar cada libro escribís tu bitácora y lo puntuás con estrellas.</p>
+              </div>
+              <div className="p-8 border-b-4 md:border-b-0 md:border-r-4 border-[#1A1A1A] hover:bg-orange-50 transition-colors group">
+                <div className="w-12 h-12 bg-[#1A1A1A] text-white flex items-center justify-center font-black text-2xl mb-6 group-hover:bg-[#FF5F00] transition-colors">03</div>
+                <h3 className="font-black uppercase text-xl mb-3 leading-none text-[#1A1A1A]">Ganá XP <br/> y logros</h3>
+                <p className="font-mono text-xs uppercase leading-relaxed text-gray-500">Cada ruta completada suma experiencia y desbloquea sellos de maquinista.</p>
+              </div>
+              <div className="p-8 hover:bg-orange-50 transition-colors group">
+                <div className="w-12 h-12 bg-[#1A1A1A] text-white flex items-center justify-center font-black text-2xl mb-6 group-hover:bg-[#FF5F00] transition-colors">04</div>
+                <h3 className="font-black uppercase text-xl mb-3 leading-none text-[#1A1A1A]">Revisá tu <br/> historial</h3>
+                <p className="font-mono text-xs uppercase leading-relaxed text-gray-500">Todas tus rutas y reseñas quedan guardadas en tu perfil personal.</p>
+              </div>
             </div>
           </section>
 
@@ -192,41 +207,18 @@ const Inicio = ({ isLogged, lineas, lineasAleatorias, barajarLineas }) => {
           </div>
 
           {/* FOOTER TERMINAL */}
-          <footer className="bg-[#1A1A1A] text-white -mx-8 p-12 border-t-8 border-[#FF5F00]">
-            <div className="max-w-7xl mx-auto grid md:grid-cols-12 gap-12">
-              <div className="md:col-span-5">
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="w-8 h-8 bg-[#FF5F00] flex items-center justify-center text-white font-black text-xs uppercase">P</div>
-                  <span className="font-black uppercase tracking-tighter text-2xl">Próxima Estación</span>
+          <footer className="bg-[#1A1A1A] text-white -mx-8 border-t-4 border-[#FF5F00] px-8 py-8">
+            <div className="max-w-7xl mx-auto flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 bg-[#FF5F00] flex items-center justify-center text-white font-black text-sm uppercase">P</div>
+                <div>
+                  <span className="font-black uppercase tracking-tighter text-2xl block leading-none">Próxima Estación</span>
+                  <span className="font-mono text-[8px] uppercase tracking-widest opacity-40 italic">Terminal Global // 2026</span>
                 </div>
-                <p className="font-mono text-xs uppercase tracking-widest leading-relaxed opacity-60 max-w-sm">
-                  Sistema de gestión de itinerarios literarios. Trazando rutas desde 2026. 
-                  Todos los derechos reservados.
-                </p>
+                <span className="text-gray-700 ml-4">·</span>
+                <Link to="/auth" className="font-mono text-[10px] uppercase text-gray-500 hover:text-[#FF5F00] transition-colors tracking-widest">Acceder</Link>
               </div>
-              <div className="md:col-span-3 font-mono">
-                <h4 className="text-[#FF5F00] font-black text-xs uppercase mb-6 tracking-[0.2em]">Mapa del Sitio</h4>
-                <ul className="space-y-4 text-sm uppercase font-bold">
-                  <li><a href="#" className="hover:text-[#FF5F00] transition-colors">// Terminal_Central</a></li>
-                  <li><a href="#" className="hover:text-[#FF5F00] transition-colors">// Red_Global</a></li>
-                </ul>
-              </div>
-              <div className="md:col-span-4 font-mono">
-                <h4 className="text-[#FF5F00] font-black text-xs uppercase mb-6 tracking-[0.2em]">Conexión</h4>
-                <div className="border-2 border-white/20 p-4 relative overflow-hidden">
-                  <p className="text-[10px] mb-2 opacity-50 uppercase tracking-tighter">Suscripción a alertas:</p>
-                  <div className="flex">
-                    <input type="text" placeholder="EMAIL_ADRESS" className="bg-transparent border-b-2 border-white/40 flex-grow py-1 text-xs outline-none focus:border-[#FF5F00]" />
-                    <button className="ml-2 text-[#FF5F00] font-black text-xs underline uppercase">Enviar</button>
-                  </div>
-                  <div className="absolute top-0 right-0 w-2 h-2 bg-green-500 animate-pulse m-1"></div>
-                </div>
-              </div>
-            </div>
-            <div className="max-w-7xl mx-auto mt-20 pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center opacity-40 font-mono text-[9px] uppercase tracking-[0.4em]">
-              <span>System_Status: Optimal</span>
-              <span>v.2.6.0_Stable</span>
-              <span>Build_Date: FEB_2026</span>
+              <span className="font-mono text-[10px] uppercase text-gray-600 tracking-widest">2026</span>
             </div>
           </footer>
         </main>
