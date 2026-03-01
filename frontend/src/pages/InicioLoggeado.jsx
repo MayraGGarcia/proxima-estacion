@@ -4,6 +4,7 @@ import Tren from '../components/Tren';
 import { useEstacion } from '../context/EstacionContext';
 import { usePerfil } from '../context/PerfilContext';
 import API_URL from '../config';
+import { sonarAbordar, sonarLogro, iniciarAudio } from '../hooks/useSonidos';
 
 // --- [COMPONENTE 1]: FLAPSTAT ---
 const FlapStat = ({ label, value }) => {
@@ -282,7 +283,7 @@ const InicioLoggeado = ({ setIsLogged }) => {
     });
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white relative">
+      <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white relative" onClick={iniciarAudio}>
       
       {/* FONDO DE CUADRÍCULA */}
       <div className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none" 

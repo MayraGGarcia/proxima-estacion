@@ -45,7 +45,7 @@ const Inicio = ({ isLogged, lineas, lineasAleatorias, barajarLineas }) => {
       .catch(() => {});
   }, []);
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white overflow-x-hidden">
+      <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white overflow-x-hidden">
       
       {/* FONDO DE CUADRÍCULA TÉCNICA */}
       <div className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none" 

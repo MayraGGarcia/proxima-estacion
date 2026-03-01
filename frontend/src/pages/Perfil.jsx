@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import TerminalCreacion from '../components/TerminalCreacion';
 import { useEstacion } from '../context/EstacionContext';
+import { sonarClick, sonarLogro, iniciarAudio } from '../hooks/useSonidos';
 import { usePerfil } from '../context/PerfilContext';
 import API_URL from '../config';
 
@@ -31,6 +32,16 @@ const Perfil = () => {
 
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [logrosExpanded, setLogrosExpanded] = useState(false);
+
+  // Sonar cuando se desbloquea un logro
+  const logrosNuevosRef = React.useRef([]);
+  useEffect(() => {
+    if (logrosNuevos?.length > 0 && logrosNuevos !== logrosNuevosRef.current) {
+      sonarLogro();
+      logrosNuevosRef.current = logrosNuevos;
+    }
+  }, [logrosNuevos]);
+
   const [verTodasResenas, setVerTodasResenas] = useState(false);
   const [misResenas, setMisResenas] = useState([]);
 
@@ -70,7 +81,7 @@ const Perfil = () => {
   const hayMasHistorial = historial.length > 3;
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white overflow-x-hidden relative">
+      <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white overflow-x-hidden relative">
 
       <ToastLogro logros={logrosNuevos} />
 

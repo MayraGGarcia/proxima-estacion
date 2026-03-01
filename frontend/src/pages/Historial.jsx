@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ItemAnimado } from '../components/PaginaAnimada';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEstacion } from '../context/EstacionContext';
 
@@ -20,7 +21,7 @@ const Historial = () => {
     });
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white">
+      <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white">
 
       {/* FONDO CUADRÍCULA */}
       <div className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none"
@@ -84,7 +85,8 @@ const Historial = () => {
             {historialFiltrado.length === 0 ? (
               <div className="py-20 border-4 border-dashed border-[#1A1A1A]/10 text-center uppercase font-black opacity-20">Sin resultados para "{busqueda}"</div>
             ) : historialFiltrado.map((r, i) => (
-              <div key={r.id || i}
+              <ItemAnimado key={r.id || i} delay={i * 0.07}>
+              <div
                 className="border-4 border-[#1A1A1A] bg-[#E8E4D9] shadow-[8px_8px_0px_0px_#1A1A1A] p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:translate-x-1 transition-all">
 
                 <div className="flex-grow">
@@ -128,6 +130,7 @@ const Historial = () => {
                   Ver Bitácora →
                 </button>
               </div>
+              </ItemAnimado>
             ))}
           </div>
         )}

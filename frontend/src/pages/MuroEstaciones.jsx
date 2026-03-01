@@ -93,7 +93,7 @@ const BitacoraRuta = ({ rutaId }) => {
   });
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] p-4 md:p-8 font-sans">
+      <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] p-4 md:p-8 font-sans">
       <div className="max-w-3xl mx-auto">
         <Link to="/perfil" className="inline-block border-2 border-black px-6 py-2 font-black uppercase text-[10px] mb-8 hover:bg-black hover:text-white shadow-[4px_4px_0px_0px_#FF5F00] transition-all">
           ← VOLVER AL PERFIL
@@ -169,7 +169,7 @@ const MuroGlobal = ({ rutas, reportes }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] p-8">
+      <div className="min-h-screen bg-[#F5F5F5] p-8">
       <div className="max-w-5xl mx-auto text-left">
         <header className="border-b-8 border-black pb-6 mb-12">
           <h1 className="text-7xl font-black uppercase italic tracking-tighter">REGISTROS</h1>

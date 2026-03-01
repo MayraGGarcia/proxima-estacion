@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useEstacion } from '../context/EstacionContext';
 import { usePerfil } from '../context/PerfilContext';
 import API_URL from '../config';
+import { sonarEstacion, iniciarAudio } from '../hooks/useSonidos';
 
 const RutaActiva = () => {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ const RutaActiva = () => {
 
   if (!rutaActiva) {
     return (
-      <div className="min-h-screen bg-[#F5F5F5] flex flex-col items-center justify-center p-8 font-sans">
+        <div className="min-h-screen bg-[#F5F5F5] flex flex-col items-center justify-center p-8 font-sans">
         <h2 className="text-4xl font-black italic uppercase mb-8">No hay ruta activa en el sistema</h2>
         <Link to="/perfil" className="bg-[#1A1A1A] text-white px-8 py-4 font-black uppercase text-xs hover:bg-[#FF5F00] shadow-[6px_6px_0px_0px_#FF5F00]">
           Ir al Perfil de Despacho
@@ -75,6 +76,7 @@ const RutaActiva = () => {
     : comentario.trim().length > 0 && estrellasComentario > 0;
 
   const handleValidarArribo = async () => {
+    sonarEstacion();
     if (!puedeValidar) return;
     const textoBitacora = (resenaActual && !sobreescribir)
       ? resenaActual.texto
@@ -170,7 +172,7 @@ const RutaActiva = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans relative overflow-x-hidden text-left">
+    <div onClick={iniciarAudio} className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans relative overflow-x-hidden text-left">
 
       {/* TOAST: Ruta completada */}
       <div className="relative z-10 p-3 md:p-8 max-w-7xl mx-auto">

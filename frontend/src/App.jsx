@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { sonarClick, iniciarAudio } from './hooks/useSonidos';
+import PaginaAnimada from './components/PaginaAnimada';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { EstacionProvider } from './context/EstacionContext';
 import { PerfilProvider } from './context/PerfilContext';
 
@@ -14,7 +16,21 @@ import MisResenas from './pages/MisResenas';
 import Historial from './pages/Historial';
 import NotFound from './pages/NotFound';
 
+const ScrollToTop = () => { const { pathname } = useLocation(); useEffect(() => { window.scrollTo(0, 0); }, [pathname]); return null; };
+
 function App() {
+  // Sonido global en todos los botones y links
+  useEffect(() => {
+    const handler = (e) => {
+      const el = e.target.closest('button, a, [role="button"]');
+      if (el && !el.disabled) {
+        iniciarAudio();
+        sonarClick();
+      }
+    };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
   const [isLogged, setIsLogged] = useState(() => !!sessionStorage.getItem('maquinista'));
   const [maquinista, setMaquinista] = useState(() => sessionStorage.getItem('maquinista') || '');
 
@@ -29,29 +45,24 @@ function App() {
     <EstacionProvider maquinista={maquinista}>
     <PerfilProvider maquinista={maquinista}>
       <Router>
+        <ScrollToTop />
         <Routes>
           <Route path="/"
-            element={isLogged
-              ? <InicioLoggeado setIsLogged={handleLogout} maquinista={maquinista} />
-              : <Inicio />}
+            element={<PaginaAnimada key={isLogged ? "loggeado" : "inicio"}>{isLogged ? <InicioLoggeado setIsLogged={handleLogout} maquinista={maquinista} /> : <Inicio />}</PaginaAnimada>}
           />
           <Route path="/auth"
-            element={!isLogged
-              ? <Auth setIsLogged={setIsLogged} setMaquinista={setMaquinista} />
-              : <Navigate to="/" />}
+            element={!isLogged ? <PaginaAnimada key="auth"><Auth setIsLogged={setIsLogged} setMaquinista={setMaquinista} /></PaginaAnimada> : <Navigate to="/" />}
           />
           <Route path="/perfil"
-            element={isLogged
-              ? <Perfil setIsLogged={handleLogout} maquinista={maquinista} />
-              : <Navigate to="/auth" />}
+            element={isLogged ? <PaginaAnimada key="perfil"><Perfil setIsLogged={handleLogout} maquinista={maquinista} /></PaginaAnimada> : <Navigate to="/auth" />}
           />
-          <Route path="/ruta/activa" element={isLogged ? <RutaActiva maquinista={maquinista} /> : <Navigate to="/auth" />} />
-          <Route path="/muro" element={<MuroEstaciones />} />
-          <Route path="/muro/:rutaId" element={<MuroEstaciones />} />
-          <Route path="/estacion/:libroTitulo" element={<FichaEstacion maquinista={maquinista} />} />
-          <Route path="/mis-resenas" element={isLogged ? <MisResenas maquinista={maquinista} /> : <Navigate to="/auth" />} />
-          <Route path="/historial" element={isLogged ? <Historial /> : <Navigate to="/auth" />} />
-          <Route path="*" element={<NotFound />} />
+          <Route path="/ruta/activa" element={isLogged ? <PaginaAnimada key="ruta"><RutaActiva maquinista={maquinista} /></PaginaAnimada> : <Navigate to="/auth" />} />
+          <Route path="/muro" element={<PaginaAnimada key="muro"><MuroEstaciones /></PaginaAnimada>} />
+          <Route path="/muro/:rutaId" element={<PaginaAnimada key="muro"><MuroEstaciones /></PaginaAnimada>} />
+          <Route path="/estacion/:libroTitulo" element={<PaginaAnimada key="ficha"><FichaEstacion maquinista={maquinista} /></PaginaAnimada>} />
+          <Route path="/mis-resenas" element={isLogged ? <PaginaAnimada key="resenas"><MisResenas maquinista={maquinista} /></PaginaAnimada> : <Navigate to="/auth" />} />
+          <Route path="/historial" element={isLogged ? <PaginaAnimada key="historial"><Historial /></PaginaAnimada> : <Navigate to="/auth" />} />
+          <Route path="*" element={<PaginaAnimada key="404"><NotFound /></PaginaAnimada>} />
         </Routes>
       </Router>
     </PerfilProvider>

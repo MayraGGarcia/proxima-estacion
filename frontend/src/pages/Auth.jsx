@@ -46,7 +46,7 @@ const Auth = ({ setIsLogged, setMaquinista }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 md:p-8 font-sans relative overflow-hidden" 
+      <div className="min-h-screen flex items-center justify-center p-4 md:p-8 font-sans relative overflow-hidden" 
          style={{ backgroundColor: '#1A1A1A', backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 40px)' }}>
       
       <div className="relative z-10 w-full max-w-xl bg-[#E8E4D9] shadow-[10px_10px_0px_0px_#FF5F00] md:shadow-[20px_20px_0px_0px_#FF5F00] flex flex-col md:flex-row border-4 border-[#1A1A1A]">

@@ -174,7 +174,7 @@ const FichaEstacion = () => {
   const resenasOtros = resenas.filter(r => r.maquinista !== MAQUINISTA);
 
   return (
-    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white">
+      <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white">
 
       {/* FONDO CUADRÍCULA */}
       <div className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none"
