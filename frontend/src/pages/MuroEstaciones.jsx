@@ -51,7 +51,7 @@ const BitacoraRuta = ({ rutaId }) => {
   const tituloRuta = infoLocal?.nombre || infoLocal?.ruta || infoLocal?.titulo || nombreRuta || 'Cargando...';
 
   useEffect(() => {
-    const normalizar = (data) => (Array.isArray(data) ? data : [data]).filter(Boolean).map(reg => ({
+    const normalizar = (lista) => (Array.isArray(lista) ? lista : [lista]).filter(Boolean).map(reg => ({
       ...reg,
       reporteFinal: reg.reporteFinal || reg.extracto || '',
       bitacoras: (reg.bitacoras || []).map(b => ({
@@ -62,51 +62,35 @@ const BitacoraRuta = ({ rutaId }) => {
       }))
     }));
 
+    const cargarPorRutaId = (id) =>
+      fetch(`${API_URL}/api/registros/${id}`)
+        .then(res => res.json())
+        .then(data => setRegistrosBackend(normalizar(data)))
+        .catch(err => console.error("Error cargando muro:", err));
+
     fetch(`${API_URL}/api/registros/detalle/${rutaId}`)
       .then(res => res.ok ? res.json() : null)
       .then(data => {
-        if (data && (data.bitacoras?.length > 0 || data._id)) {
-          setRegistrosBackend(normalizar(data));
+        if (data?._id) {
+          const idRutaReal = data.rutaId?._id || data.rutaId;
+          if (idRutaReal) {
+            cargarPorRutaId(idRutaReal);
+          } else {
+            setRegistrosBackend(normalizar(data));
+          }
         } else {
-          return fetch(`${API_URL}/api/registros/${rutaId}`)
-            .then(res => res.json())
-            .then(data2 => setRegistrosBackend(normalizar(data2)));
+          cargarPorRutaId(rutaId);
         }
       })
-      .catch(() => {
-        fetch(`${API_URL}/api/registros/${rutaId}`)
-          .then(res => res.json())
-          .then(data => setRegistrosBackend(normalizar(data)))
-          .catch(err => console.error("Error cargando backend:", err));
-      });
+      .catch(() => cargarPorRutaId(rutaId));
   }, [rutaId]);
 
-  const registrosFinales = (() => {
-    const local = reportes.find(r => String(r.id) === String(rutaId));
-    let lista = [...registrosBackend];
-
-    if (local) {
-      const contenidoLocalRaw = local.extracto || local.reporteFinal;
-      const contenidoLocal = typeof contenidoLocalRaw === 'object' && contenidoLocalRaw !== null
-        ? (contenidoLocalRaw.extracto || contenidoLocalRaw.texto || '')
-        : (contenidoLocalRaw || '');
-      lista = lista.filter(r => r.reporteFinal !== contenidoLocal);
-      
-      lista.unshift({
-        _id: local.id,
-        maquinista: `${sessionStorage.getItem('maquinista') || 'ANONIMO'} (LOCAL)`,
-        fechaFinalizacion: local.fecha,
-        reporteFinal: contenidoLocal,
-        bitacoras: (local.estaciones || []).map(e => ({
-          estacionTitulo: e.titulo,
-          estacionAutor: e.autor,
-          portada: e.portada || e.imagen,
-          texto: e.bitacora || e.texto
-        }))
-      });
-    }
-    return lista;
-  })();
+  const maquinistaActual = sessionStorage.getItem('maquinista') || '';
+  const registrosFinales = [...registrosBackend].sort((a, b) => {
+    if (a.maquinista === maquinistaActual) return -1;
+    if (b.maquinista === maquinistaActual) return 1;
+    return 0;
+  });
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] p-4 md:p-8 font-sans">
@@ -123,11 +107,16 @@ const BitacoraRuta = ({ rutaId }) => {
         </header>
 
         <div className="space-y-12">
-          {registrosFinales.map((reg, idx) => (
-            <div key={idx} className="border-4 border-black bg-white shadow-[10px_10px_0px_0px_#1A1A1A]">
-              <div className="bg-black p-4 flex justify-between items-center text-white">
-                <span className="font-black uppercase italic">{reg.maquinista}</span>
-                <span className="font-mono text-[10px] opacity-50">{reg.fechaFinalizacion ? new Date(reg.fechaFinalizacion).toLocaleDateString("es-AR") : ""}</span>
+          {registrosFinales.map((reg, idx) => {
+            const esMio = reg.maquinista === maquinistaActual;
+            return (
+            <div key={idx} className={`border-4 bg-white shadow-[10px_10px_0px_0px_#1A1A1A] ${esMio ? 'border-[#FF5F00]' : 'border-black'}`}>
+              <div className={`p-4 flex justify-between items-center text-white ${esMio ? 'bg-[#FF5F00]' : 'bg-black'}`}>
+                <div className="flex items-center gap-3">
+                  <span className={`font-black uppercase italic ${esMio ? 'text-black' : 'text-white'}`}>{reg.maquinista}</span>
+                  {esMio && <span className="font-black text-[9px] uppercase bg-black text-[#FF5F00] px-2 py-0.5">Tu Bitácora</span>}
+                </div>
+                <span className={`font-mono text-[10px] opacity-60 ${esMio ? 'text-black' : 'text-white'}`}>{reg.fechaFinalizacion ? new Date(reg.fechaFinalizacion).toLocaleDateString("es-AR") : ""}</span>
               </div>
               
               <div className="divide-y-2 divide-black/5">
@@ -165,7 +154,8 @@ const BitacoraRuta = ({ rutaId }) => {
                 </div>
               )}
             </div>
-          ))}
+          );
+          })}
         </div>
       </div>
     </div>

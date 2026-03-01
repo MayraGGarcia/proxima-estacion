@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import TerminalCreacion from '../components/TerminalCreacion';
 import { useEstacion } from '../context/EstacionContext';
 import { usePerfil } from '../context/PerfilContext';
+import API_URL from '../config';
 
 // --- TOAST DE LOGRO DESBLOQUEADO ---
 const ToastLogro = ({ logros, onClose }) => {
@@ -36,7 +37,7 @@ const Perfil = () => {
   useEffect(() => { sincronizarTerminal(); }, []);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/resenas/maquinista/${sessionStorage.getItem('maquinista') || 'ANONIMO'}`)
+    fetch(`${API_URL}/api/resenas/maquinista/${sessionStorage.getItem('maquinista') || 'ANONIMO'}`)
       .then(r => r.json())
       .then(data => setMisResenas(Array.isArray(data) ? data : []))
       .catch(() => {});
@@ -338,7 +339,7 @@ const Perfil = () => {
               onClick={async () => {
                 if (!window.confirm('¿Resetear todo el progreso? XP, logros, historial y reseñas se borrarán.')) return;
                 try {
-                  await fetch(`http://localhost:5000/api/perfil/${sessionStorage.getItem('maquinista')}/reset`, { method: 'DELETE' });
+                  await fetch(`${API_URL}/api/perfil/${sessionStorage.getItem('maquinista')}/reset`, { method: 'DELETE' });
                 } catch (e) { console.error('Error al resetear perfil:', e); }
                 sessionStorage.clear();
                 localStorage.clear();

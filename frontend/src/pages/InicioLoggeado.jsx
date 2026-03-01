@@ -212,6 +212,16 @@ const InicioLoggeado = ({ setIsLogged }) => {
   const [busqueda, setBusqueda] = useState('');
   const [rutaSeleccionada, setRutaSeleccionada] = useState(null);
   const [errorTerminal, setErrorTerminal] = useState(null);
+  const [mostrarBienvenida, setMostrarBienvenida] = useState(() => {
+    const key = `bienvenida_${sessionStorage.getItem('maquinista')}`;
+    return !localStorage.getItem(key);
+  });
+
+  const cerrarBienvenida = () => {
+    const key = `bienvenida_${sessionStorage.getItem('maquinista')}`;
+    localStorage.setItem(key, '1');
+    setMostrarBienvenida(false);
+  };
 
   useEffect(() => {
     fetch(`${API_URL}/api/rutas`)
@@ -280,6 +290,41 @@ const InicioLoggeado = ({ setIsLogged }) => {
       </div>
 
       <div className="relative z-10">
+        {/* BIENVENIDA USUARIO NUEVO */}
+        {mostrarBienvenida && historialCargado && historial.length === 0 && !rutaActiva && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#1A1A1A]/90 backdrop-blur-sm">
+            <div className="bg-white border-4 border-[#FF5F00] w-full max-w-md shadow-[12px_12px_0px_0px_#FF5F00]">
+              <div className="bg-[#FF5F00] p-6 border-b-4 border-[#1A1A1A]">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-black/60 block mb-1">Primera_Vez // Bienvenido</span>
+                <h2 className="text-2xl font-black uppercase italic leading-none text-black">¡Bienvenido, {maquinista}!</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                <p className="font-mono text-xs uppercase text-gray-600 leading-relaxed">
+                  Próxima Estación es una red de itinerarios literarios. Cada ruta es una secuencia de libros que otros lectores curaron para vos.
+                </p>
+                <div className="space-y-2">
+                  {[
+                    { n: '01', t: 'Explorá las rutas disponibles abajo' },
+                    { n: '02', t: 'Abrí una bitácora para ver sus libros' },
+                    { n: '03', t: 'Abordá la que más te guste y empezá a leer' },
+                    { n: '04', t: 'También podés registrar libros que ya leíste' },
+                  ].map(({ n, t }) => (
+                    <div key={n} className="flex items-center gap-3 border-l-4 border-[#FF5F00] pl-3">
+                      <span className="font-black text-[#1A1A1A]/20 text-lg leading-none">{n}</span>
+                      <p className="font-mono text-[10px] uppercase font-black">{t}</p>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={cerrarBienvenida}
+                  className="w-full bg-[#1A1A1A] text-white py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-black transition-all shadow-[4px_4px_0px_0px_#FF5F00] active:scale-95 mt-2">
+                  Entendido, ¡a leer! →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* MODALES Y ALERTAS */}
         {errorTerminal && (
           <div className="fixed top-0 left-0 w-full z-[200] bg-red-600 text-white font-black p-4 flex justify-between items-center animate-in slide-in-from-top duration-300">

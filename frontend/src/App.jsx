@@ -12,6 +12,7 @@ import MuroEstaciones from './pages/MuroEstaciones';
 import FichaEstacion from './pages/FichaEstacion';
 import MisResenas from './pages/MisResenas';
 import Historial from './pages/Historial';
+import NotFound from './pages/NotFound';
 
 function App() {
   const [isLogged, setIsLogged] = useState(() => !!sessionStorage.getItem('maquinista'));
@@ -50,7 +51,7 @@ function App() {
           <Route path="/estacion/:libroTitulo" element={<FichaEstacion maquinista={maquinista} />} />
           <Route path="/mis-resenas" element={isLogged ? <MisResenas maquinista={maquinista} /> : <Navigate to="/auth" />} />
           <Route path="/historial" element={isLogged ? <Historial /> : <Navigate to="/auth" />} />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Router>
     </PerfilProvider>

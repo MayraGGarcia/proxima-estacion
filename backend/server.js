@@ -41,6 +41,7 @@ app.get('/api/registros/detalle/:id', async (req, res) => {
     const estaciones = registro.rutaId?.estaciones || [];
     const resultado = {
       _id: registro._id,
+      rutaId: registro.rutaId?._id || registro.rutaId,
       maquinista: registro.maquinista,
       reporteFinal: registro.reporteFinal,
       fechaFinalizacion: registro.fechaFinalizacion,

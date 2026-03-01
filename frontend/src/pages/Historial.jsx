@@ -1,10 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEstacion } from '../context/EstacionContext';
 
 const Historial = () => {
   const navigate = useNavigate();
   const { historial } = useEstacion();
+  const [busqueda, setBusqueda] = useState('');
+  const [orden, setOrden] = useState('RECIENTES');
+
+  const historialFiltrado = [...historial]
+    .filter(r => r.titulo?.toLowerCase().includes(busqueda.toLowerCase()) ||
+                 r.estaciones?.some(e => e.titulo?.toLowerCase().includes(busqueda.toLowerCase())))
+    .sort((a, b) => {
+      if (orden === 'RECIENTES') return new Date(b.fechaFinalizacion || 0) - new Date(a.fechaFinalizacion || 0);
+      if (orden === 'ANTIGUOS') return new Date(a.fechaFinalizacion || 0) - new Date(b.fechaFinalizacion || 0);
+      if (orden === 'A-Z') return (a.titulo || '').localeCompare(b.titulo || '');
+      if (orden === 'Z-A') return (b.titulo || '').localeCompare(a.titulo || '');
+      return 0;
+    });
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white">
@@ -41,6 +54,26 @@ const Historial = () => {
           </div>
         </header>
 
+        {/* BUSCADOR Y FILTROS */}
+        <div className="mb-8 flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            placeholder="Buscar ruta o libro..."
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            className="flex-grow bg-white border-4 border-[#1A1A1A] p-3 font-mono text-xs uppercase outline-none focus:border-[#FF5F00] transition-all"
+          />
+          <select
+            value={orden}
+            onChange={e => setOrden(e.target.value)}
+            className="bg-white border-4 border-[#1A1A1A] px-4 py-3 font-black uppercase text-xs outline-none focus:border-[#FF5F00] transition-all cursor-pointer">
+            <option value="RECIENTES">Más recientes</option>
+            <option value="ANTIGUOS">Más antiguos</option>
+            <option value="A-Z">A → Z</option>
+            <option value="Z-A">Z → A</option>
+          </select>
+        </div>
+
         {/* LISTA */}
         {historial.length === 0 ? (
           <div className="py-32 border-4 border-dashed border-[#1A1A1A]/10 text-center uppercase font-black opacity-20">
@@ -48,7 +81,9 @@ const Historial = () => {
           </div>
         ) : (
           <div className="space-y-6">
-            {historial.map((r, i) => (
+            {historialFiltrado.length === 0 ? (
+              <div className="py-20 border-4 border-dashed border-[#1A1A1A]/10 text-center uppercase font-black opacity-20">Sin resultados para "{busqueda}"</div>
+            ) : historialFiltrado.map((r, i) => (
               <div key={r.id || i}
                 className="border-4 border-[#1A1A1A] bg-[#E8E4D9] shadow-[8px_8px_0px_0px_#1A1A1A] p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:translate-x-1 transition-all">
 
@@ -56,7 +91,7 @@ const Historial = () => {
                   {/* Número de orden */}
                   <div className="flex items-center gap-3 mb-3">
                     <span className="font-black text-4xl text-[#1A1A1A]/10 leading-none">
-                      {String(historial.length - i).padStart(2, '0')}
+                      {String(historial.indexOf(r) + 1).padStart(2, '0')}
                     </span>
                     <div>
                       <div className="flex items-center gap-2">

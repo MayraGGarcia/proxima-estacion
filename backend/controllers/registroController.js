@@ -37,10 +37,26 @@ const obtenerRegistrosPorRuta = async (req, res) => {
     const { rutaId } = req.params;
     const mongoose = require('mongoose');
     if (!mongoose.Types.ObjectId.isValid(rutaId)) {
-      return res.json([]); // ID local, no hay registros en el servidor
+      return res.json([]);
     }
-    const registros = await Registro.find({ rutaId }).sort({ fechaFinalizacion: -1 });
-    res.json(registros);
+    const registros = await Registro.find({ rutaId })
+      .populate('rutaId', 'estaciones')
+      .sort({ fechaFinalizacion: -1 });
+
+    const estaciones = registros[0]?.rutaId?.estaciones || [];
+    const resultado = registros.map(r => ({
+      _id: r._id,
+      maquinista: r.maquinista,
+      reporteFinal: r.reporteFinal,
+      fechaFinalizacion: r.fechaFinalizacion,
+      bitacoras: r.bitacoras.map((b, i) => ({
+        estacionTitulo: b.estacionTitulo || estaciones[i]?.titulo || '',
+        estacionAutor: b.estacionAutor || estaciones[i]?.autor || '',
+        portada: estaciones[i]?.portada || null,
+        texto: b.texto || ''
+      }))
+    }));
+    res.json(resultado);
   } catch (error) {
     res.status(500).json({ message: "Error al obtener los registros" });
   }

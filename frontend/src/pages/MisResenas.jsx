@@ -39,6 +39,19 @@ const MisResenas = () => {
   const [guardando, setGuardando] = useState(false);
   const [errorForm, setErrorForm] = useState('');
   const [exito, setExito] = useState(false);
+  const [filtroResenas, setFiltroResenas] = useState('');
+  const [ordenResenas, setOrdenResenas] = useState('RECIENTES');
+
+  const resenasFiltradas = [...resenas]
+    .filter(r => r.libroTitulo?.toLowerCase().includes(filtroResenas.toLowerCase()) ||
+                 r.libroAutor?.toLowerCase().includes(filtroResenas.toLowerCase()))
+    .sort((a, b) => {
+      if (ordenResenas === 'RECIENTES') return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+      if (ordenResenas === 'ANTIGUOS') return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+      if (ordenResenas === 'ESTRELLAS') return b.estrellas - a.estrellas;
+      if (ordenResenas === 'A-Z') return (a.libroTitulo || '').localeCompare(b.libroTitulo || '');
+      return 0;
+    });
 
   const cargarResenas = async () => {
     try {
@@ -272,6 +285,27 @@ const MisResenas = () => {
 
           {/* COLUMNA DERECHA — Lista de reseñas */}
           <main className="lg:w-3/5">
+            {/* BUSCADOR Y FILTROS */}
+            {resenas.length > 0 && (
+              <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                <input
+                  type="text"
+                  placeholder="Buscar por título o autor..."
+                  value={filtroResenas}
+                  onChange={e => setFiltroResenas(e.target.value)}
+                  className="flex-grow bg-white border-4 border-[#1A1A1A] p-3 font-mono text-xs uppercase outline-none focus:border-[#FF5F00] transition-all"
+                />
+                <select
+                  value={ordenResenas}
+                  onChange={e => setOrdenResenas(e.target.value)}
+                  className="bg-white border-4 border-[#1A1A1A] px-4 py-3 font-black uppercase text-xs outline-none focus:border-[#FF5F00] transition-all cursor-pointer">
+                  <option value="RECIENTES">Más recientes</option>
+                  <option value="ANTIGUOS">Más antiguos</option>
+                  <option value="ESTRELLAS">Mayor puntuación</option>
+                  <option value="A-Z">A → Z</option>
+                </select>
+              </div>
+            )}
             {cargando ? (
               <div className="py-20 text-center font-black uppercase animate-pulse opacity-40 text-xs">
                 Cargando reseñas...
@@ -280,9 +314,13 @@ const MisResenas = () => {
               <div className="py-20 border-4 border-dashed border-[#1A1A1A]/10 text-center uppercase font-black opacity-20">
                 Todavía no reseñaste ningún libro
               </div>
+            ) : resenasFiltradas.length === 0 ? (
+              <div className="py-20 border-4 border-dashed border-[#1A1A1A]/10 text-center uppercase font-black opacity-20">
+                Sin resultados para "{filtroResenas}"
+              </div>
             ) : (
               <div className="space-y-4">
-                {resenas.map((r, i) => (
+                {resenasFiltradas.map((r, i) => (
                   <div key={i} className="border-4 border-[#1A1A1A] bg-white shadow-[6px_6px_0px_0px_#1A1A1A] p-5 flex gap-5 group">
                     {/* Portada */}
                     <button
