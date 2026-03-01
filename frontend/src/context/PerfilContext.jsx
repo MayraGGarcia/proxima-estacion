@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
+import API_URL from '../config';
 
 const PerfilContext = createContext();
 
@@ -13,8 +14,8 @@ export const PerfilProvider = ({ children, maquinista }) => {
     if (!maquinista) return;
     try {
       const [perfilRes, desafioRes] = await Promise.all([
-        fetch(`http://localhost:5000/api/perfil/${maquinista}`),
-        fetch(`http://localhost:5000/api/desafio/activo?maquinista=${maquinista}`)
+        fetch(`${API_URL}/api/perfil/${maquinista}`),
+        fetch(`${API_URL}/api/desafio/activo?maquinista=${maquinista}`)
       ]);
       const perfil = await perfilRes.json();
       const desafio = await desafioRes.json();
@@ -39,7 +40,7 @@ export const PerfilProvider = ({ children, maquinista }) => {
   const ganarXP = async (cantidad, motivo, extras = {}) => {
     if (!maquinista) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/perfil/${maquinista}/xp`, {
+      const res = await fetch(`${API_URL}/api/perfil/${maquinista}/xp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cantidad, motivo, ...extras })

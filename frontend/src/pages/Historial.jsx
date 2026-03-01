@@ -13,7 +13,7 @@ const Historial = () => {
       <div className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none"
         style={{ backgroundImage: 'linear-gradient(#1A1A1A 1px, transparent 1px), linear-gradient(90deg, #1A1A1A 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
 
-      <div className="relative z-10 max-w-4xl mx-auto p-8">
+      <div className="relative z-10 max-w-4xl mx-auto p-4 md:p-8">
 
         {/* NAV */}
         <div className="mb-10 flex items-center justify-between">
@@ -31,11 +31,11 @@ const Historial = () => {
           <span className="bg-[#1A1A1A] text-white px-2 py-1 text-[9px] font-mono uppercase tracking-[0.2em] mb-3 inline-block">
             Archivo_de_Líneas
           </span>
-          <div className="flex items-end justify-between">
-            <h1 className="text-6xl md:text-7xl font-black uppercase tracking-tighter leading-[0.85]">
+          <div className="flex items-end justify-between gap-4">
+            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-[0.85]">
               Rutas <br /><span className="text-[#FF5F00]">Completadas</span>.
             </h1>
-            <span className="font-black text-8xl text-[#1A1A1A]/5 leading-none">
+            <span className="font-black text-5xl md:text-8xl text-[#1A1A1A]/10 leading-none flex-shrink-0">
               {String(historial.length).padStart(3, '0')}
             </span>
           </div>

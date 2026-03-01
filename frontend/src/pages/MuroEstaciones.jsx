@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useEstacion } from '../context/EstacionContext';
+import API_URL from '../config';
 
 const PortadaEstacion = ({ est }) => {
   if (!est) return <div className="w-20 h-28 bg-[#1A1A1A]" />;
@@ -32,27 +33,52 @@ const BitacoraRuta = ({ rutaId }) => {
   const navigate = useNavigate();
   const { rutas, historial, reportes } = useEstacion();
   const [registrosBackend, setRegistrosBackend] = useState([]);
+  const [nombreRuta, setNombreRuta] = useState('');
 
   const infoLocal = reportes.find(r => String(r.id) === String(rutaId)) || 
-                    rutas.find(r => String(r._id) === String(rutaId));
+                    rutas.find(r => String(r._id) === String(rutaId)) ||
+                    historial.find(r => String(r.id) === String(rutaId));
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/registros/${rutaId}`)
-      .then(res => res.json())
+    const nombreYaResuelto = infoLocal?.nombre || infoLocal?.ruta || infoLocal?.titulo;
+    if (nombreYaResuelto) return;
+    fetch(`${API_URL}/api/rutas/${rutaId}`)
+      .then(r => r.json())
+      .then(data => { if (data?.nombre) setNombreRuta(data.nombre); })
+      .catch(() => {});
+  }, [rutaId, infoLocal]);
+
+  const tituloRuta = infoLocal?.nombre || infoLocal?.ruta || infoLocal?.titulo || nombreRuta || 'Cargando...';
+
+  useEffect(() => {
+    const normalizar = (data) => (Array.isArray(data) ? data : [data]).filter(Boolean).map(reg => ({
+      ...reg,
+      reporteFinal: reg.reporteFinal || reg.extracto || '',
+      bitacoras: (reg.bitacoras || []).map(b => ({
+        estacionTitulo: b.estacionTitulo || b.titulo,
+        estacionAutor: b.estacionAutor || b.autor,
+        portada: b.portada || b.imagen,
+        texto: b.texto || b.bitacora
+      }))
+    }));
+
+    fetch(`${API_URL}/api/registros/detalle/${rutaId}`)
+      .then(res => res.ok ? res.json() : null)
       .then(data => {
-        const normalizado = (Array.isArray(data) ? data : []).map(reg => ({
-          ...reg,
-          reporteFinal: reg.reporteFinal || reg.extracto || '',
-          bitacoras: (reg.bitacoras || []).map(b => ({
-            estacionTitulo: b.estacionTitulo || b.titulo,
-            estacionAutor: b.estacionAutor || b.autor,
-            portada: b.portada || b.imagen,
-            texto: b.texto || b.bitacora
-          }))
-        }));
-        setRegistrosBackend(normalizado);
+        if (data && (data.bitacoras?.length > 0 || data._id)) {
+          setRegistrosBackend(normalizar(data));
+        } else {
+          return fetch(`${API_URL}/api/registros/${rutaId}`)
+            .then(res => res.json())
+            .then(data2 => setRegistrosBackend(normalizar(data2)));
+        }
       })
-      .catch(err => console.error("Error cargando backend:", err));
+      .catch(() => {
+        fetch(`${API_URL}/api/registros/${rutaId}`)
+          .then(res => res.json())
+          .then(data => setRegistrosBackend(normalizar(data)))
+          .catch(err => console.error("Error cargando backend:", err));
+      });
   }, [rutaId]);
 
   const registrosFinales = (() => {
@@ -92,7 +118,7 @@ const BitacoraRuta = ({ rutaId }) => {
         <header className="border-b-8 border-black pb-6 mb-12">
           <span className="bg-[#FF5F00] text-black px-2 py-0.5 font-black text-[10px] uppercase">Terminal de Registros</span>
           <h1 className="text-6xl font-black uppercase italic tracking-tighter mt-2">
-            {infoLocal?.nombre || infoLocal?.ruta || 'RUTA_EXTERNA'}
+            {tituloRuta}
           </h1>
         </header>
 

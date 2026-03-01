@@ -5,7 +5,7 @@ require('dotenv').config();
 const rutasEjemplo = [
   {
     nombre: "Línea de los Gigantes",
-    pasajeros: 1540,
+    pasajeros: 67,
     estaciones: [
       { titulo: "El Nombre del Viento", autor: "Patrick Rothfuss", paginas: 662, año: 2007, portada: "https://covers.openlibrary.org/b/id/8739161-M.jpg" },
       { titulo: "Los Miserables", autor: "Victor Hugo", paginas: 1400, año: 1862, portada: "https://covers.openlibrary.org/b/id/109652-M.jpg" },
@@ -15,7 +15,7 @@ const rutasEjemplo = [
   },
   {
     nombre: "Expreso del Neón",
-    pasajeros: 2800,
+    pasajeros: 54,
     estaciones: [
       { titulo: "Neuromante", autor: "William Gibson", paginas: 271, año: 1984, portada: "https://covers.openlibrary.org/b/id/8739405-M.jpg" },
       { titulo: "¿Sueñan los androides con ovejas eléctricas?", autor: "Philip K. Dick", paginas: 210, año: 1968, portada: "https://covers.openlibrary.org/b/id/8091016-M.jpg" },
@@ -25,7 +25,7 @@ const rutasEjemplo = [
   },
   {
     nombre: "Ruta del Terror Gótico",
-    pasajeros: 980,
+    pasajeros: 38,
     estaciones: [
       { titulo: "Frankenstein", autor: "Mary Shelley", paginas: 280, año: 1818, portada: "https://covers.openlibrary.org/b/id/8269561-M.jpg" },
       { titulo: "Drácula", autor: "Bram Stoker", paginas: 418, año: 1897, portada: "https://covers.openlibrary.org/b/id/8457978-M.jpg" },
@@ -36,7 +36,7 @@ const rutasEjemplo = [
   },
   {
     nombre: "Trasbordo Macondo",
-    pasajeros: 3200,
+    pasajeros: 71,
     estaciones: [
       { titulo: "Cien años de soledad", autor: "Gabriel García Márquez", paginas: 471, año: 1967, portada: "https://covers.openlibrary.org/b/id/8228105-M.jpg" },
       { titulo: "Rayuela", autor: "Julio Cortázar", paginas: 600, año: 1963, portada: "https://covers.openlibrary.org/b/id/8291037-M.jpg" },
@@ -47,7 +47,7 @@ const rutasEjemplo = [
   },
   {
     nombre: "Línea Noir",
-    pasajeros: 1750,
+    pasajeros: 45,
     estaciones: [
       { titulo: "El largo adiós", autor: "Raymond Chandler", paginas: 379, año: 1953, portada: "https://covers.openlibrary.org/b/id/8226197-M.jpg" },
       { titulo: "El nombre de la rosa", autor: "Umberto Eco", paginas: 502, año: 1980, portada: "https://covers.openlibrary.org/b/id/8775558-M.jpg" },

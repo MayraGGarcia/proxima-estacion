@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import API_URL from '../config';
 
 const Auth = ({ setIsLogged, setMaquinista }) => { 
   const [isLogin, setIsLogin] = useState(true);
@@ -18,7 +19,7 @@ const Auth = ({ setIsLogged, setMaquinista }) => {
     setCargando(true);
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/registro';
-      const res = await fetch(`http://localhost:5000${endpoint}`, {
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ maquinista: usuario.trim(), password })
@@ -45,15 +46,15 @@ const Auth = ({ setIsLogged, setMaquinista }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-8 font-sans relative overflow-hidden" 
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-8 font-sans relative overflow-hidden" 
          style={{ backgroundColor: '#1A1A1A', backgroundImage: 'repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(255,255,255,0.06) 38px, rgba(255,255,255,0.06) 40px)' }}>
       
-      <div className="relative z-10 w-full max-w-xl bg-[#E8E4D9] shadow-[20px_20px_0px_0px_#FF5F00] flex flex-col md:flex-row border-4 border-[#1A1A1A]">
-        <div className="flex-[2] p-8 border-b-4 md:border-b-0 md:border-r-4 border-dashed border-[#1A1A1A] text-left">
+      <div className="relative z-10 w-full max-w-xl bg-[#E8E4D9] shadow-[10px_10px_0px_0px_#FF5F00] md:shadow-[20px_20px_0px_0px_#FF5F00] flex flex-col md:flex-row border-4 border-[#1A1A1A]">
+        <div className="flex-[2] p-6 md:p-8 border-b-4 md:border-b-0 md:border-r-4 border-dashed border-[#1A1A1A] text-left">
           <div className="flex justify-between items-start mb-10">
             <div>
               <p className="font-mono text-[10px] font-black uppercase tracking-widest leading-none mb-1 text-[#1A1A1A]">Pase_de_Abordaje</p>
-              <h1 className="text-4xl font-black uppercase tracking-tighter leading-none text-[#1A1A1A]">
+              <h1 className="text-3xl md:text-4xl font-black uppercase tracking-tighter leading-none text-[#1A1A1A]">
                 {isLogin ? "Acceso" : "Alta"}
               </h1>
             </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import API_URL from '../config';
 
 const MAQUINISTA = sessionStorage.getItem('maquinista') || 'ANONIMO';
 
@@ -99,7 +100,7 @@ const FichaEstacion = () => {
   const cargarResenas = async () => {
     try {
       setCargando(true);
-      const res = await fetch(`http://localhost:5000/api/resenas/libro/${encodeURIComponent(libro.titulo)}`);
+      const res = await fetch(`${API_URL}/api/resenas/libro/${encodeURIComponent(libro.titulo)}`);
       const data = await res.json();
       setResenas(data.resenas || []);
       setPromedio(data.promedio);
@@ -139,7 +140,7 @@ const FichaEstacion = () => {
         texto: texto.trim()
       };
       console.log('[FichaEstacion] Enviando reseña:', payload);
-      const res = await fetch('http://localhost:5000/api/resenas', {
+      const res = await fetch(`${API_URL}/api/resenas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -159,7 +160,7 @@ const FichaEstacion = () => {
   const handleEliminar = async (titulo) => {
     if (!window.confirm('¿Eliminar tu reseña?')) return;
     try {
-      await fetch(`http://localhost:5000/api/resenas/${encodeURIComponent(titulo)}/${MAQUINISTA}`, {
+      await fetch(`${API_URL}/api/resenas/${encodeURIComponent(titulo)}/${MAQUINISTA}`, {
         method: 'DELETE'
       });
       setEstrellas(0);

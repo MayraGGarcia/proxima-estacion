@@ -78,7 +78,7 @@ const Perfil = () => {
       </div>
 
       <div className="relative z-10">
-        <div className="max-w-6xl mx-auto p-8">
+        <div className="max-w-6xl mx-auto p-4 md:p-8">
 
           <div className="mb-8 text-left">
             <Link to="/" className="inline-block border-2 border-[#1A1A1A] px-6 py-2 font-black uppercase text-[10px] hover:bg-[#1A1A1A] hover:text-white transition-all shadow-[4px_4px_0px_0px_#FF5F00] active:shadow-none bg-white">
@@ -86,17 +86,17 @@ const Perfil = () => {
             </Link>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-8 mb-20">
+          <div className="flex flex-col lg:flex-row gap-6 md:gap-8 mb-12 md:mb-20">
 
             {/* COLUMNA IZQUIERDA */}
             <aside className="lg:w-1/3 space-y-6">
 
               {/* TARJETA DE USUARIO */}
-              <div className="bg-[#E8E4D9] text-[#1A1A1A] p-8 border-4 border-[#1A1A1A] shadow-[12px_12px_0px_0px_#1A1A1A] text-left sticky top-8">
-                <div className="w-24 h-24 bg-[#1A1A1A] mb-6 flex items-center justify-center border-4 border-[#FF5F00] shadow-lg rotate-3">
+              <div className="bg-[#E8E4D9] text-[#1A1A1A] p-6 md:p-8 border-4 border-[#1A1A1A] shadow-[8px_8px_0px_0px_#1A1A1A] md:shadow-[12px_12px_0px_0px_#1A1A1A] text-left md:sticky md:top-8">
+                <div className="w-14 h-14 md:w-20 md:h-20 bg-[#1A1A1A] mb-4 flex items-center justify-center border-4 border-[#FF5F00] shadow-lg rotate-3">
                   <span className="text-4xl font-black text-[#FF5F00]">{(maquinista || "??").slice(0,2)}</span>
                 </div>
-                <h2 className="text-3xl font-black uppercase leading-none mb-1 italic tracking-tighter">{maquinista}</h2>
+                <h2 className="text-2xl md:text-3xl font-black uppercase leading-none mb-1 italic tracking-tighter">{maquinista}</h2>
                 <p className="font-mono text-[10px] uppercase text-[#1A1A1A]/50 tracking-widest mb-1">ID_Maquinista: {maquinista}</p>
 
                 {/* RANGO Y XP */}
@@ -192,13 +192,10 @@ const Perfil = () => {
                   </span>
                 </div>
 
-                {misResenas.length === 0 ? (
-                  <div className="p-6 text-center">
-                    <p className="font-mono text-[8px] uppercase text-gray-400 opacity-60">Sin reseñas todavía</p>
-                  </div>
-                ) : (
-                  <div className="p-5">
-                    {/* 3 portadas con más estrellas */}
+                <div className="p-5">
+                  {misResenas.length === 0 ? (
+                    <p className="font-mono text-[8px] uppercase text-gray-400 opacity-60 text-center mb-3">Sin reseñas todavía</p>
+                  ) : (
                     <div className="flex gap-3 mb-4">
                       {[...misResenas]
                         .sort((a, b) => b.estrellas - a.estrellas)
@@ -221,13 +218,13 @@ const Perfil = () => {
                           </button>
                         ))}
                     </div>
-                    <button
-                      onClick={() => navigate('/mis-resenas')}
-                      className="w-full border-4 border-[#1A1A1A] py-3 font-black uppercase text-[10px] bg-white hover:bg-[#FF5F00] transition-all shadow-[4px_4px_0px_0px_#1A1A1A] active:shadow-none">
-                      Ver Todos →
-                    </button>
-                  </div>
-                )}
+                  )}
+                  <button
+                    onClick={() => navigate('/mis-resenas')}
+                    className="w-full border-4 border-[#1A1A1A] py-3 font-black uppercase text-[10px] bg-white hover:bg-[#FF5F00] transition-all shadow-[4px_4px_0px_0px_#1A1A1A] active:shadow-none">
+                    {misResenas.length === 0 ? 'Agregar Libros Leídos →' : 'Ver / Agregar →'}
+                  </button>
+                </div>
               </div>
 
             </aside>
@@ -249,14 +246,14 @@ const Perfil = () => {
                     </div>
                     <button
                       onClick={() => navigate('/ruta/activa')}
-                      className="bg-[#1A1A1A] text-white px-8 py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-[#1A1A1A] transition-all shadow-[6px_6px_0px_0px_rgba(255,95,0,0.3)]">
+                      className="bg-[#1A1A1A] text-white px-4 md:px-8 py-3 md:py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-[#1A1A1A] transition-all shadow-[6px_6px_0px_0px_rgba(255,95,0,0.3)]">
                       Retomar Ruta →
                     </button>
                   </div>
                 ) : (
                   <button
                     onClick={() => setIsTerminalOpen(true)}
-                    className="bg-[#1A1A1A] text-white px-8 py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-[#1A1A1A] transition-all shadow-[6px_6px_0px_0px_rgba(255,95,0,0.3)] active:shadow-none">
+                    className="bg-[#1A1A1A] text-white px-4 md:px-8 py-3 md:py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-[#1A1A1A] transition-all shadow-[6px_6px_0px_0px_rgba(255,95,0,0.3)] active:shadow-none">
                     + Crear Nueva Ruta
                   </button>
                 )}
@@ -264,7 +261,7 @@ const Perfil = () => {
 
               <div className="space-y-6">
                 {listaCompleta.length > 0 ? listaCompleta.map((r, index) => (
-                  <div key={r.id || index} className={`border-4 border-[#1A1A1A] p-8 flex flex-col md:flex-row justify-between items-center gap-8 transition-all hover:translate-x-1
+                  <div key={r.id || index} className={`border-4 border-[#1A1A1A] p-4 md:p-8 flex flex-col md:flex-row justify-between items-center gap-4 md:gap-8 transition-all hover:translate-x-1
                     ${r.isActiva
                       ? 'bg-white shadow-[10px_10px_0px_0px_#FF5F00] ring-2 ring-[#FF5F00]/30'
                       : 'bg-[#E8E4D9] shadow-[10px_10px_0px_0px_#1A1A1A] opacity-80'}`}>
@@ -328,7 +325,7 @@ const Perfil = () => {
           </div>
         </div>
 
-        <footer className="bg-[#1A1A1A] text-white p-12 text-left border-t-8 border-[#FF5F00]">
+        <footer className="bg-[#1A1A1A] text-white p-6 md:p-12 text-left border-t-8 border-[#FF5F00]">
           <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#FF5F00] flex items-center justify-center text-white font-black text-sm uppercase">P</div>
@@ -339,7 +336,7 @@ const Perfil = () => {
             </div>
             <button
               onClick={async () => {
-                if (!window.confirm('¿Resetear todo el progreso? XP, logros y desafíos se borrarán.')) return;
+                if (!window.confirm('¿Resetear todo el progreso? XP, logros, historial y reseñas se borrarán.')) return;
                 try {
                   await fetch(`http://localhost:5000/api/perfil/${sessionStorage.getItem('maquinista')}/reset`, { method: 'DELETE' });
                 } catch (e) { console.error('Error al resetear perfil:', e); }

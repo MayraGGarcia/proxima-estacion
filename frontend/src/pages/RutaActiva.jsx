@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useEstacion } from '../context/EstacionContext';
 import { usePerfil } from '../context/PerfilContext';
+import API_URL from '../config';
 
 const RutaActiva = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const RutaActiva = () => {
 
   // Cargar reseñas del usuario para mostrar badge en estación actual
   useEffect(() => {
-    fetch(`http://localhost:5000/api/resenas/maquinista/${MAQUINISTA}`)
+    fetch(`${API_URL}/api/resenas/maquinista/${MAQUINISTA}`)
       .then(r => r.json())
       .then(data => setMisResenas(Array.isArray(data) ? data : []))
       .catch(() => {});
@@ -37,7 +38,7 @@ const RutaActiva = () => {
 
   // Cargar reseñas propias para detectar libros ya reseñados
   useEffect(() => {
-    fetch(`http://localhost:5000/api/resenas/maquinista/${MAQUINISTA}`)
+    fetch(`${API_URL}/api/resenas/maquinista/${MAQUINISTA}`)
       .then(r => r.json())
       .then(data => setMisResenas(Array.isArray(data) ? data : []))
       .catch(() => {});
@@ -83,7 +84,7 @@ const RutaActiva = () => {
     const debeGuardarResena = !resenaActual || sobreescribir;
     if (debeGuardarResena && comentario.trim() && estrellasComentario > 0) {
       try {
-        const nuevaResena = await fetch('http://localhost:5000/api/resenas', {
+        const nuevaResena = await fetch(`${API_URL}/api/resenas`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -138,7 +139,7 @@ const RutaActiva = () => {
 
     // Publicar el registro en el backend para que todos los maquinistas lo vean
     try {
-      await fetch('http://localhost:5000/api/registros', {
+      await fetch(`${API_URL}/api/registros`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -171,14 +172,15 @@ const RutaActiva = () => {
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans relative overflow-x-hidden text-left">
 
-      <div className="relative z-10 p-4 md:p-8 max-w-7xl mx-auto">
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12 border-b-4 border-[#1A1A1A] pb-8">
+      {/* TOAST: Ruta completada */}
+      <div className="relative z-10 p-3 md:p-8 max-w-7xl mx-auto">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 md:mb-12 border-b-4 border-[#1A1A1A] pb-6 md:pb-8">
           <div>
             <div className="flex gap-2 mb-4">
               <span className="bg-[#1A1A1A] text-white px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest font-black">Control_Vía</span>
               <span className="border-2 border-[#1A1A1A] px-2 py-0.5 font-mono text-[9px] uppercase font-bold text-[#FF5F00]">ID_{rutaActiva.id}</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-black uppercase italic leading-[0.8] tracking-tighter">{rutaActiva.titulo}</h1>
+            <h1 className="text-3xl md:text-5xl lg:text-7xl font-black uppercase italic leading-[0.8] tracking-tighter">{rutaActiva.titulo}</h1>
           </div>
 
           <div className="flex gap-3 w-full md:w-auto flex-wrap">
@@ -205,7 +207,7 @@ const RutaActiva = () => {
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-10">
           <aside className="lg:col-span-4 space-y-6">
             <div className="bg-white border-4 border-[#1A1A1A] p-6 shadow-[8px_8px_0px_0px_#1A1A1A]">
               <h3 className="font-black uppercase text-xs mb-8 border-b-2 border-[#FF5F00] inline-block italic">Progreso de la Línea</h3>
@@ -238,7 +240,7 @@ const RutaActiva = () => {
               </div>
 
               <div className="mb-10">
-                <h2 className="text-6xl md:text-8xl font-black uppercase italic leading-[0.85] tracking-tighter mb-4">
+                <h2 className="text-4xl md:text-6xl lg:text-8xl font-black uppercase italic leading-[0.85] tracking-tighter mb-4">
                   {rutaFinalizada ? "FIN DEL VIAJE" : estacionActual?.titulo}
                 </h2>
                 {!rutaFinalizada && (() => {

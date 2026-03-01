@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Tren from '../components/Tren';
 import { useEstacion } from '../context/EstacionContext';
 import { usePerfil } from '../context/PerfilContext';
+import API_URL from '../config';
 
 // --- [COMPONENTE 1]: FLAPSTAT ---
 const FlapStat = ({ label, value }) => {
@@ -12,15 +13,15 @@ const FlapStat = ({ label, value }) => {
     : String(value);
 
   return (
-    <div className="flex flex-col items-start border-l-4 border-[#FF5F00] pl-6 py-2 text-left">
-      <span className="text-[9px] font-mono text-gray-400 uppercase tracking-[0.3em] mb-4">
+    <div className="flex flex-col items-start border-l-4 border-[#FF5F00] pl-3 md:pl-6 py-2 text-left">
+      <span className="text-[8px] font-mono text-gray-400 uppercase tracking-[0.2em] mb-2 truncate max-w-full">
         {label}
       </span>
       <div className="flex gap-[2px]">
         {safeValue.split('').map((char, i) => (
           <span 
             key={i} 
-            className="text-2xl font-black bg-[#1A1A1A] text-[#FF5F00] p-2 min-w-[32px] text-center rounded-sm relative overflow-hidden shadow-inner"
+            className="text-base md:text-2xl font-black bg-[#1A1A1A] text-[#FF5F00] p-1 md:p-2 min-w-[20px] md:min-w-[32px] text-center rounded-sm relative overflow-hidden shadow-inner"
           >
             {char}
             <div className="absolute top-1/2 left-0 w-full h-[1px] bg-black/40"></div>
@@ -32,76 +33,60 @@ const FlapStat = ({ label, value }) => {
 };
 
 // --- [COMPONENTE 2]: MODAL DE BITÁCORA (DETALLE) ---
-const ModalBitacora = ({ ruta, onClose, onSeguir }) => {
+const ModalBitacora = ({ ruta, onClose, onSeguir, yaCompletada }) => {
   if (!ruta) return null;
 
   const criterio = ruta.configuracion?.metodo || 'Manual';
   const justificacion = ruta.configuracion?.justificacion;
 
   const criterioConfig = {
-    'Kilometraje': { label: 'Orden por Kilometraje', color: 'bg-blue-500', detalle: (est) => `${est.paginas || '?'} KM` },
-    'Cronología':  { label: 'Orden Cronológico',     color: 'bg-purple-500', detalle: (est) => `${est.año || '?'}` },
+    'Kilometraje': { label: 'Orden por Kilometraje', color: 'bg-blue-500', detalle: (est) => null },
+    'Cronología':  { label: 'Orden Cronológico',     color: 'bg-purple-500', detalle: (est) => `Año ${est.año || '?'}` },
     'Manual':      { label: 'Orden Manual',           color: 'bg-[#FF5F00]',  detalle: (est) => null },
   };
   const cfg = criterioConfig[criterio] || criterioConfig['Manual'];
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#1A1A1A]/95 backdrop-blur-md text-left">
-      <div className="bg-white border-4 border-[#FF5F00] w-full max-w-2xl shadow-[20px_20px_0px_0px_#1A1A1A] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-white border-4 border-[#FF5F00] w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[90vh] shadow-[0px_-8px_0px_0px_#FF5F00] sm:shadow-[10px_10px_0px_0px_#1A1A1A] flex flex-col overflow-hidden rounded-t-lg sm:rounded-none">
 
         {/* HEADER */}
-        <div className="bg-[#1A1A1A] p-6 flex justify-between items-center border-b-4 border-[#FF5F00]">
-          <div>
-            <span className="text-[#FF5F00] font-mono text-[10px] uppercase tracking-widest block mb-1 underline underline-offset-4">Manifiesto de Carga // REF_{ruta._id?.slice(-6).toUpperCase()}</span>
-            <h2 className="text-white text-4xl font-black uppercase italic leading-none tracking-tighter">{ruta.nombre}</h2>
+        <div className="bg-[#1A1A1A] px-4 py-3 md:p-6 flex justify-between items-center border-b-4 border-[#FF5F00] flex-shrink-0">
+          <div className="min-w-0 pr-2">
+            <span className="text-[#FF5F00] font-mono text-[9px] uppercase tracking-widest block mb-0.5 opacity-70">REF_{ruta._id?.slice(-6).toUpperCase()}</span>
+            <h2 className="text-white text-lg md:text-3xl font-black uppercase italic leading-none tracking-tighter truncate">{ruta.nombre}</h2>
           </div>
-          <button onClick={onClose} className="text-white hover:text-[#FF5F00] font-black text-3xl p-2 transition-colors">✕</button>
+          <button onClick={onClose} className="text-white hover:text-[#FF5F00] font-black text-2xl p-1 flex-shrink-0 transition-colors">✕</button>
         </div>
 
         {/* BADGE DE CRITERIO */}
-        <div className="px-8 pt-6 pb-2 bg-[#F5F5F5] flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <span className={`${cfg.color} text-white font-black text-[9px] uppercase px-3 py-1 tracking-widest`}>
+        <div className="px-4 py-2 bg-[#F5F5F5] border-b border-[#1A1A1A]/10 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className={`${cfg.color} text-white font-black text-[9px] uppercase px-2 py-0.5 tracking-widest`}>
               {cfg.label}
             </span>
-            {criterio !== 'Manual' && (
-              <span className="font-mono text-[9px] text-gray-400 uppercase">
-                Estaciones ordenadas de menor a mayor
-              </span>
+            {criterio === 'Manual' && justificacion && (
+              <span className="font-mono text-[9px] text-gray-400 uppercase italic truncate">"{justificacion}"</span>
             )}
           </div>
-          {criterio === 'Manual' && justificacion && (
-            <div className="border-l-4 border-[#FF5F00] pl-3 py-1">
-              <p className="font-mono text-[9px] text-gray-400 uppercase font-bold tracking-wider mb-0.5">Sello de Curaduría</p>
-              <p className="font-bold text-xs uppercase italic text-[#1A1A1A]">"{justificacion}"</p>
-            </div>
-          )}
         </div>
 
         {/* ESTACIONES */}
-        <div className="p-8 bg-[#F5F5F5] space-y-6 max-h-[50vh] overflow-y-auto">
+        <div className="flex-1 min-h-0 overflow-y-auto bg-[#F5F5F5] p-3 md:p-6 space-y-3">
           {ruta.estaciones.map((est, index) => (
-            <div key={index} className="flex items-start gap-6 group">
-              <div className="flex flex-col items-center pt-2">
-                <div className="w-5 h-5 rounded-full border-4 border-[#1A1A1A] bg-[#FF5F00]"></div>
-                {index !== ruta.estaciones.length - 1 && <div className="w-1 h-20 bg-[#1A1A1A] my-1"></div>}
+            <div key={index} className="flex items-center gap-3 bg-white border-2 border-[#1A1A1A] shadow-[3px_3px_0px_0px_#1A1A1A] p-3">
+              <span className="font-black text-[#1A1A1A]/20 text-2xl leading-none flex-shrink-0 w-8 text-center">{index + 1}</span>
+              <div className="w-10 h-14 bg-gray-200 border border-black/10 flex-shrink-0 overflow-hidden">
+                {est.portada && <img src={est.portada} alt="" className="w-full h-full object-cover" />}
               </div>
-              <div className="flex-grow p-4 border-2 border-[#1A1A1A] shadow-[6px_6px_0px_0px_#1A1A1A] bg-white flex gap-5">
-                <div className="w-16 h-24 bg-gray-200 border-2 border-black flex-shrink-0 overflow-hidden">
-                  {est.portada && <img src={est.portada} alt="" className="w-full h-full object-cover" />}
-                </div>
-                <div className="min-w-0 flex flex-col justify-center">
-                  <span className="font-black text-lg uppercase italic leading-tight mb-1">{est.titulo}</span>
-                  <span className="font-mono text-xs text-gray-500 uppercase font-black tracking-widest">{est.autor}</span>
-                  <div className="flex gap-2 mt-3 flex-wrap">
-                    <span className="text-[10px] font-bold uppercase bg-black text-white px-2 py-0.5 tracking-tighter">EST: {index + 1}</span>
-                    <span className="text-[10px] font-bold uppercase border border-black px-2 py-0.5 tracking-tighter">{est.paginas || '000'} KM</span>
-                    {cfg.detalle(est) && (
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 tracking-tighter text-white ${cfg.color}`}>
-                        {cfg.detalle(est)}
-                      </span>
-                    )}
-                  </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-black text-sm uppercase italic leading-tight truncate">{est.titulo}</p>
+                <p className="font-mono text-[9px] text-gray-400 uppercase truncate">{est.autor}</p>
+                <div className="flex gap-1 mt-1 flex-wrap">
+                  <span className="text-[9px] font-bold uppercase bg-black text-white px-1.5 py-0.5">{est.paginas || '?'} KM</span>
+                  {cfg.detalle(est) && (
+                    <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 text-white ${cfg.color}`}>{cfg.detalle(est)}</span>
+                  )}
                 </div>
               </div>
             </div>
@@ -109,12 +94,15 @@ const ModalBitacora = ({ ruta, onClose, onSeguir }) => {
         </div>
 
         {/* FOOTER */}
-        <div className="p-6 bg-white border-t-4 border-[#1A1A1A] flex justify-between items-center">
-          <div className="text-left border-l-4 border-[#FF5F00] pl-4">
-            <p className="font-mono text-[10px] font-black uppercase opacity-50 tracking-widest">Pasajeros Actuales</p>
-            <p className="text-3xl font-black text-[#1A1A1A] leading-none italic">{String(Math.max(ruta.pasajeros || 0, 1)).padStart(4, '0')}</p>
+        <div className="px-4 py-3 md:p-6 bg-white border-t-4 border-[#1A1A1A] flex justify-between items-center flex-shrink-0">
+          <div className="text-left border-l-4 border-[#FF5F00] pl-3">
+            <p className="font-mono text-[9px] font-black uppercase opacity-50">Pasajeros</p>
+            <p className="text-xl md:text-2xl font-black text-[#1A1A1A] leading-none italic">{String(Math.max(ruta.pasajeros || 0, 1)).padStart(4, '0')}</p>
           </div>
-          <button onClick={() => onSeguir(ruta)} className="bg-[#FF5F00] text-black px-10 py-4 font-black uppercase text-sm shadow-[6px_6px_0px_0px_#1A1A1A] hover:bg-black hover:text-[#FF5F00] transition-all transform active:scale-95">Abordar Línea →</button>
+          {yaCompletada
+            ? <span className="font-black uppercase text-xs text-[#1A1A1A] border-2 border-[#FF5F00]/40 bg-[#FF5F00]/10 px-6 py-3">Línea Transitada</span>
+            : <button onClick={() => onSeguir(ruta)} className="bg-[#FF5F00] text-black px-6 py-3 font-black uppercase text-xs shadow-[4px_4px_0px_0px_#1A1A1A] hover:bg-black hover:text-[#FF5F00] transition-all active:scale-95">Abordar →</button>
+          }
         </div>
       </div>
     </div>
@@ -197,7 +185,7 @@ const SeccionTransbordos = ({ rutas }) => (
       <div className="flex-grow h-[2px] bg-[#1A1A1A] opacity-10"></div>
       <span className="font-mono text-[10px] font-black animate-pulse text-[#FF5F00]">LIVE_FEED</span>
     </div>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       {rutas.slice(0, 4).map((r, i) => (
         <div key={i} className="flex items-center justify-between p-4 border-2 border-[#1A1A1A] bg-white hover:bg-[#1A1A1A] hover:text-white transition-all group">
           <div className="flex items-center gap-4">
@@ -216,7 +204,7 @@ const SeccionTransbordos = ({ rutas }) => (
 const InicioLoggeado = ({ setIsLogged }) => {
   const maquinista = sessionStorage.getItem('maquinista') || 'MAQUINISTA';
   const navigate = useNavigate();
-  const { rutaActiva, despacharRutaActiva } = useEstacion();
+  const { rutaActiva, despacharRutaActiva, historial, historialCargado } = useEstacion();
   const { ganarXP, desafioActivo, xp, nivel } = usePerfil();
   const [rutas, setRutas] = useState([]);
   const [cargando, setCargando] = useState(true);
@@ -226,7 +214,7 @@ const InicioLoggeado = ({ setIsLogged }) => {
   const [errorTerminal, setErrorTerminal] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/rutas')
+    fetch(`${API_URL}/api/rutas`)
       .then(res => res.json())
       .then(data => { 
         setRutas(data); 
@@ -242,9 +230,16 @@ const InicioLoggeado = ({ setIsLogged }) => {
       setTimeout(() => setErrorTerminal(null), 5000);
       return;
     }
+    const yaCompletada = historialCargado && historial.some(h => String(h.rutaId) === String(ruta._id));
+    if (yaCompletada) {
+      setErrorTerminal(`VÍA_TRANSITADA: Ya completaste la línea "${ruta.nombre}". Buscá una nueva ruta.`);
+      setRutaSeleccionada(null);
+      setTimeout(() => setErrorTerminal(null), 5000);
+      return;
+    }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/rutas/${ruta._id}/abordar`, { 
+      const res = await fetch(`${API_URL}/api/rutas/${ruta._id}/abordar`, { 
         method: 'PUT' 
       });
       if (!res.ok) throw new Error("Fallo en la sincronización");
@@ -261,7 +256,8 @@ const InicioLoggeado = ({ setIsLogged }) => {
     }
   };
 
-  const totalPasajeros = rutas.reduce((acc, curr) => acc + Math.max(curr.pasajeros || 0, 1), 0);
+  const librosLeidos = historial.reduce((acc, r) => acc + (r.estaciones?.length || 0), 0);
+  const totalAbordajes = rutas.reduce((acc, curr) => acc + Math.max(curr.pasajeros || 0, 0), 0);
 
   const filtradas = [...rutas]
     .filter(r => r.nombre.toLowerCase().includes(busqueda.toLowerCase()))
@@ -295,37 +291,43 @@ const InicioLoggeado = ({ setIsLogged }) => {
           </div>
         )}
 
-        {rutaSeleccionada && <ModalBitacora ruta={rutaSeleccionada} onClose={() => setRutaSeleccionada(null)} onSeguir={handleAbordar} />}
+        {rutaSeleccionada && <ModalBitacora ruta={rutaSeleccionada} onClose={() => setRutaSeleccionada(null)} onSeguir={handleAbordar} yaCompletada={historialCargado && historial.some(h => String(h.rutaId) === String(rutaSeleccionada._id))} />}
 
-        <nav className="p-10 flex justify-between items-center border-b-4 border-[#1A1A1A] sticky top-0 bg-[#F5F5F5]/80 backdrop-blur-md z-50">
+        <nav className="px-4 py-4 md:p-10 flex justify-between items-center border-b-4 border-[#1A1A1A] sticky top-0 bg-[#F5F5F5]/80 backdrop-blur-md z-50">
           <div className="flex items-center gap-4 font-black uppercase text-2xl italic tracking-tighter">
             <div className="w-10 h-10 bg-[#1A1A1A] text-[#FF5F00] flex items-center justify-center border-b-4 border-[#FF5F00]">P</div>
             Próxima Estación <span className="text-[#FF5F00] not-italic ml-2 font-mono text-xs tracking-widest opacity-40">v.1.0</span>
           </div>
-          <div className="flex gap-6 items-center">
+          <div className="flex gap-2 md:gap-4 items-center">
+            {/* Desktop: botón completo */}
             <Link 
               to="/perfil" 
-              className="px-8 py-3 bg-[#1A1A1A] text-white font-black uppercase text-xs shadow-[5px_5px_0px_0px_#FF5F00] hover:bg-[#FF5F00] hover:text-black transition-all flex items-center gap-3"
+              className="hidden md:flex px-6 py-3 bg-[#1A1A1A] text-white font-black uppercase text-xs shadow-[5px_5px_0px_0px_#FF5F00] hover:bg-[#FF5F00] hover:text-black transition-all items-center gap-3"
             >
-              {/* Símbolo con animación de parpadeo */}
-              <span className="text-[#FF5F00] font-mono animate-pulse tracking-tighter">[ o ]</span>
-              Terminal Personal // {maquinista}
+              <span className="text-[#FF5F00] font-mono animate-pulse">[ o ]</span>
+              Terminal // {maquinista}
             </Link>
-            <button onClick={() => setIsLogged(false)} className="w-10 h-10 border-2 border-black hover:bg-black hover:text-white font-black transition-colors">✕</button>
+            {/* Mobile: solo ícono perfil */}
+            <Link
+              to="/perfil"
+              className="md:hidden w-10 h-10 bg-[#1A1A1A] text-[#FF5F00] flex items-center justify-center font-black border-b-2 border-[#FF5F00] text-xs"
+              title="Perfil"
+            >P</Link>
+            <button onClick={() => setIsLogged(false)} className="w-10 h-10 border-2 border-black hover:bg-black hover:text-white font-black transition-colors text-sm">✕</button>
           </div>
         </nav>
 
         <main className="max-w-7xl mx-auto py-16 px-8">
           <header className="mb-20 text-left">
             <span className="bg-[#FF5F00] text-black font-black uppercase text-[10px] px-3 py-1 mb-6 tracking-[0.4em] shadow-[4px_4px_0px_0px_#1A1A1A] inline-block">Red_Global_Sincronizada</span>
-            <h1 className="text-7xl md:text-9xl font-black uppercase tracking-tighter leading-[0.8] italic mb-8">Líneas en <br/> <span className="text-[#FF5F00] not-italic underline decoration-8">Tránsito</span>.</h1>
+            <h1 className="text-5xl md:text-7xl lg:text-9xl font-black uppercase tracking-tighter leading-[0.8] italic mb-6 md:mb-8">Líneas en <br/> <span className="text-[#FF5F00] not-italic underline decoration-8">Tránsito</span>.</h1>
           </header>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 border-4 border-[#1A1A1A] bg-[#222] mb-24 shadow-[10px_10px_0px_0px_#FF5F00]">
-            <div className="p-8 border-r-2 border-white/5"><FlapStat label="Total_Abordajes" value={totalPasajeros} /></div>
-            <div className="p-8 border-r-2 border-white/5"><FlapStat label="Líneas_Red" value={rutas.length} /></div>
-            <div className="p-8 border-r-2 border-white/5"><FlapStat label="Mi_XP" value={xp} /></div>
-            <div className="p-8"><FlapStat label="Mi_Nivel" value={({'TRAINEE':'TRN','PASAJERO':'PAS','CONDUCTOR':'CON','MAQUINISTA':'MAQ','MAQUINISTA_JEFE':'JEFE'})[nivel?.nombre] || 'TRN'} /></div>
+          <div className="grid grid-cols-2 md:grid-cols-4 border-4 border-[#1A1A1A] bg-[#222] mb-16 md:mb-24 shadow-[10px_10px_0px_0px_#FF5F00]">
+            <div className="p-3 md:p-8 border-r-2 border-white/5 overflow-hidden"><FlapStat label="Abordajes" value={totalAbordajes} /></div>
+            <div className="p-3 md:p-8 border-r-2 border-white/5 overflow-hidden"><FlapStat label="Líneas" value={rutas.length} /></div>
+            <div className="p-3 md:p-8 border-r-2 border-white/5 overflow-hidden"><FlapStat label="Mi_XP" value={xp} /></div>
+            <div className="p-3 md:p-8 overflow-hidden"><FlapStat label="Nivel" value={({'TRAINEE':'TRN','PASAJERO':'PAS','CONDUCTOR':'CON','MAQUINISTA':'MAQ','MAQUINISTA_JEFE':'JEFE'})[nivel?.nombre] || 'TRN'} /></div>
           </div>
 
           <SeccionTransbordos rutas={rutas} />
@@ -349,22 +351,32 @@ const InicioLoggeado = ({ setIsLogged }) => {
             {cargando ? (
               <p className="col-span-full font-black uppercase animate-pulse text-center py-20">Sincronizando_Vías...</p>
             ) : filtradas.length > 0 ? (
-              filtradas.map(ruta => (
-                <article key={ruta._id} className="bg-white border-4 border-[#1A1A1A] p-8 shadow-[12px_12px_0px_0px_#1A1A1A] group hover:translate-x-1 hover:translate-y-1 transition-all text-left flex flex-col h-full">
+              filtradas.map(ruta => {
+                const completada = historialCargado && historial.some(h => String(h.rutaId) === String(ruta._id));
+                return (
+                <article key={ruta._id} className={`border-4 p-8 shadow-[12px_12px_0px_0px_#1A1A1A] transition-all text-left flex flex-col h-full ${completada ? 'bg-[#F5F5F5] border-[#FF5F00]' : 'bg-white border-[#1A1A1A] group hover:translate-x-1 hover:translate-y-1'}`}>
                   <div className="flex justify-between items-center mb-8 border-b-2 border-gray-100 pb-4">
                     <span className="font-mono text-[10px] font-black text-gray-400 uppercase tracking-widest">Live_Feed // #{ruta._id?.slice(-3)}</span>
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    {completada
+                      ? <span className="font-black text-[9px] uppercase bg-[#FF5F00] text-black px-2 py-0.5 tracking-widest">✓ Completada</span>
+                      : <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    }
                   </div>
-                  <h3 className="text-4xl font-black uppercase leading-[0.9] italic mb-8 group-hover:text-[#FF5F00] break-words flex-grow">"{ruta.nombre}"</h3>
+                  <h3 className={`text-4xl font-black uppercase leading-[0.9] italic mb-8 break-words flex-grow ${completada ? 'text-[#1A1A1A]' : 'group-hover:text-[#FF5F00]'}`}>"{ruta.nombre}"</h3>
                   <div className="flex items-center justify-between gap-4 mt-auto">
                     <div className="bg-gray-100 px-4 py-2 border-l-4 border-black">
                       <span className="text-[8px] font-black uppercase text-gray-400 block">Tráfico</span>
                       <span className="font-mono text-lg font-black">{Math.max(ruta.pasajeros || 0, 1)}</span>
                     </div>
-                    <button onClick={() => setRutaSeleccionada(ruta)} className="flex-grow bg-[#1A1A1A] text-white py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-black transition-all">Ver Bitácora →</button>
+                    <button
+                      onClick={() => setRutaSeleccionada(ruta)}
+                      disabled={completada}
+                      className={`flex-grow py-4 font-black uppercase text-xs transition-all ${completada ? 'bg-[#FF5F00]/10 text-[#1A1A1A] border-2 border-[#FF5F00]/40 cursor-not-allowed' : 'bg-[#1A1A1A] text-white hover:bg-[#FF5F00] hover:text-black'}`}
+                    >{completada ? 'Línea Transitada' : 'Ver Bitácora →'}</button>
                   </div>
                 </article>
-              ))
+                );
+              })
             ) : (
               <div className="col-span-full py-20 border-4 border-dashed border-black/10 text-center">
                 <p className="font-black uppercase opacity-20">No se encontraron líneas en el sector "{busqueda}"</p>
@@ -392,8 +404,8 @@ const InicioLoggeado = ({ setIsLogged }) => {
         </main>
 
         <footer className="bg-[#1A1A1A] text-white border-t-4 border-[#FF5F00] px-8 py-8">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3 md:gap-4">
               <div className="w-10 h-10 bg-[#FF5F00] flex items-center justify-center text-white font-black text-sm uppercase">P</div>
               <div>
                 <span className="font-black uppercase tracking-tighter text-2xl block leading-none">Próxima Estación</span>

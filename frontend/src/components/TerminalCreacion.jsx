@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import API_URL from '../config';
 
 const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
   const [nombreRuta, setNombreRuta] = useState('');
@@ -67,7 +68,7 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
   };
 
   try {
-    const response = await fetch('http://localhost:5000/api/despacho', {
+    const response = await fetch(`${API_URL}/api/despacho`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -103,7 +104,7 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4">
-      <div className="bg-[#E8E4D9] border-4 border-[#1A1A1A] w-full max-w-6xl h-[90vh] flex flex-col shadow-[20px_20px_0px_0px_#FF5F00] overflow-hidden">
+      <div className="bg-[#E8E4D9] border-4 border-[#1A1A1A] w-full max-w-6xl h-[95vh] md:h-[90vh] flex flex-col shadow-[10px_10px_0px_0px_#FF5F00] md:shadow-[20px_20px_0px_0px_#FF5F00] overflow-hidden">
         
         {/* CABECERA */}
         <header className="bg-[#1A1A1A] text-white p-4 flex justify-between items-center border-b-4 border-[#FF5F00]">
@@ -111,10 +112,10 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
           <button onClick={onClose} className="font-mono hover:text-[#FF5F00] font-black">[X]</button>
         </header>
 
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           
           {/* PANEL IZQUIERDO */}
-          <section className="w-1/2 p-8 border-r-2 border-[#1A1A1A]/20 overflow-y-auto bg-white/20">
+          <section className="w-full md:w-1/2 p-4 md:p-8 border-b-2 md:border-b-0 md:border-r-2 border-[#1A1A1A]/20 overflow-y-auto bg-white/20 max-h-[45%] md:max-h-full">
             <div className="mb-6">
               <label className="block font-mono text-[10px] font-black uppercase text-gray-400 mb-1">Identificación_Ruta</label>
               <input 
@@ -162,7 +163,7 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
           </section>
 
           {/* PANEL DERECHO */}
-          <section className="w-1/2 flex flex-col bg-black/5">
+          <section className="w-full md:w-1/2 flex flex-col bg-black/5 flex-1 overflow-hidden">
             <div className="flex-1 overflow-y-auto p-8 space-y-6">
               <h3 className="font-black uppercase text-2xl italic tracking-tighter text-left">Hoja_de_Ruta</h3>
               
@@ -238,7 +239,7 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
             </div>
 
             {/* BOTÓN DESPACHO FIJO */}
-            <div className="p-8 bg-[#E8E4D9] border-t-4 border-[#1A1A1A]">
+            <div className="p-4 md:p-8 bg-[#E8E4D9] border-t-4 border-[#1A1A1A]">
               <button 
                 disabled={!despachoHabilitado}
                 onClick={handleDespacharAlServidor}

@@ -56,6 +56,7 @@ const obtenerRegistrosPorMaquinista = async (req, res) => {
 
     const historial = registros.map(r => ({
       id: r._id,
+      rutaId: r.rutaId?._id?.toString(),
       titulo: r.rutaId?.nombre || 'Ruta eliminada',
       estaciones: (r.rutaId?.estaciones || []).map((e, i) => ({
         titulo: e.titulo,

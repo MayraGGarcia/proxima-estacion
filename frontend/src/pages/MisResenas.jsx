@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import API_URL from '../config';
 
 const MAQUINISTA = sessionStorage.getItem('maquinista') || 'ANONIMO';
 
@@ -42,7 +43,7 @@ const MisResenas = () => {
   const cargarResenas = async () => {
     try {
       setCargando(true);
-      const data = await fetch(`http://localhost:5000/api/resenas/maquinista/${MAQUINISTA}`).then(r => r.json());
+      const data = await fetch(`${API_URL}/api/resenas/maquinista/${MAQUINISTA}`).then(r => r.json());
       setResenas(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
@@ -93,7 +94,7 @@ const MisResenas = () => {
     setGuardando(true);
     setErrorForm('');
     try {
-      const res = await fetch('http://localhost:5000/api/resenas', {
+      const res = await fetch(`${API_URL}/api/resenas`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -124,7 +125,7 @@ const MisResenas = () => {
 
   const handleEliminar = async (libroTitulo) => {
     if (!window.confirm('¿Eliminar esta reseña?')) return;
-    await fetch(`http://localhost:5000/api/resenas/${encodeURIComponent(libroTitulo)}/${MAQUINISTA}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/resenas/${encodeURIComponent(libroTitulo)}/${MAQUINISTA}`, { method: 'DELETE' });
     setResenas(prev => prev.filter(r => r.libroTitulo !== libroTitulo));
   };
 
@@ -144,7 +145,7 @@ const MisResenas = () => {
         </div>
       )}
 
-      <div className="relative z-10 max-w-6xl mx-auto p-8">
+      <div className="relative z-10 max-w-6xl mx-auto p-4 md:p-8">
 
         {/* NAV */}
         <div className="mb-10 flex items-center justify-between">
@@ -163,7 +164,7 @@ const MisResenas = () => {
             Registro_Personal
           </span>
           <div className="flex items-end justify-between">
-            <h1 className="text-6xl md:text-7xl font-black uppercase tracking-tighter leading-[0.85]">
+            <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-[0.85]">
               Libros <br /><span className="text-[#FF5F00]">Leídos</span>.
             </h1>
             <span className="font-black text-8xl text-[#1A1A1A]/5 leading-none">
@@ -172,11 +173,11 @@ const MisResenas = () => {
           </div>
         </header>
 
-        <div className="flex flex-col lg:flex-row gap-10">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-10">
 
           {/* COLUMNA IZQUIERDA — Buscador + Formulario */}
-          <aside className="lg:w-2/5">
-            <div className="border-4 border-[#1A1A1A] bg-white shadow-[12px_12px_0px_0px_#1A1A1A] sticky top-8">
+          <aside className="lg:w-2/5 w-full">
+            <div className="border-4 border-[#1A1A1A] bg-white shadow-[8px_8px_0px_0px_#1A1A1A] md:shadow-[12px_12px_0px_0px_#1A1A1A] lg:sticky lg:top-8">
               <div className="bg-[#1A1A1A] px-6 py-3 border-b-4 border-[#FF5F00]">
                 <span className="text-[#FF5F00] font-mono text-[10px] uppercase tracking-widest">
                   Buscador

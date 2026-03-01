@@ -30,6 +30,30 @@ app.put('/api/rutas/:id/abordar', abordarRuta);
 // Registros (bitácoras por ruta)
 app.post('/api/registros', publicarRegistro);
 app.get('/api/registros/maquinista/:maquinista', obtenerRegistrosPorMaquinista);
+app.get('/api/registros/detalle/:id', async (req, res) => {
+  try {
+    const Registro = require('./models/Registro');
+    const mongoose = require('mongoose');
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) return res.json(null);
+    const registro = await Registro.findById(req.params.id).populate('rutaId', 'nombre estaciones');
+    if (!registro) return res.json(null);
+    // Cruzar portadas de la ruta con las bitácoras del registro
+    const estaciones = registro.rutaId?.estaciones || [];
+    const resultado = {
+      _id: registro._id,
+      maquinista: registro.maquinista,
+      reporteFinal: registro.reporteFinal,
+      fechaFinalizacion: registro.fechaFinalizacion,
+      bitacoras: registro.bitacoras.map((b, i) => ({
+        estacionTitulo: b.estacionTitulo || estaciones[i]?.titulo || '',
+        estacionAutor: b.estacionAutor || estaciones[i]?.autor || '',
+        portada: estaciones[i]?.portada || null,
+        texto: b.texto || ''
+      }))
+    };
+    res.json(resultado);
+  } catch { res.json(null); }
+});
 app.get('/api/registros/:rutaId', obtenerRegistrosPorRuta);
 
 // Perfil de usuario (XP, logros, nivel)
@@ -38,6 +62,17 @@ app.post('/api/perfil/:maquinista/xp', sumarXP);
 
 // Desafíos
 app.get('/api/desafio/activo', obtenerDesafioActivo);
+
+// Stats públicas para la página de inicio
+app.get('/api/auth/stats', async (req, res) => {
+  try {
+    const Usuario = require('./models/Usuario');
+    const usuarios = await Usuario.countDocuments();
+    res.json({ usuarios });
+  } catch (err) {
+    res.json({ usuarios: 0 });
+  }
+});
 
 // Autenticación
 app.post('/api/auth/registro', registro);
@@ -52,6 +87,7 @@ app.delete('/api/resenas/:libroTitulo/:maquinista', eliminarResena);
 // Reset de perfil (para testing)
 app.delete('/api/perfil/:maquinista/reset', async (req, res) => {
   try {
+    const Registro = require('./models/Registro');
     await Promise.all([
       PerfilUsuario.findOneAndUpdate(
         { maquinista: req.params.maquinista },
@@ -59,9 +95,10 @@ app.delete('/api/perfil/:maquinista/reset', async (req, res) => {
           rutasCompletadas: 0, rutasAbordadas: 0, bitacorasEscritas: 0 },
         { returnDocument: 'after' }
       ),
-      Resena.deleteMany({ maquinista: req.params.maquinista })
+      Resena.deleteMany({ maquinista: req.params.maquinista }),
+      Registro.deleteMany({ maquinista: req.params.maquinista })
     ]);
-    res.json({ ok: true, mensaje: 'Perfil y reseñas reseteados correctamente' });
+    res.json({ ok: true, mensaje: 'Perfil, reseñas e historial reseteados correctamente' });
   } catch (err) {
     res.status(500).json({ message: 'Error al resetear perfil', error: err.message });
   }

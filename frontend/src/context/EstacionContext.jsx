@@ -1,4 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, useMemo } from 'react';
+import API_URL from '../config';
 
 const EstacionContext = createContext();
 
@@ -34,17 +35,12 @@ export const EstacionProvider = ({ children, maquinista }) => {
     } catch { return []; }
   });
 
-  const [historial, setHistorial] = useState(() => {
-    try {
-      const guardado = sessionStorage.getItem(KEY_HIST);
-      return guardado ? JSON.parse(guardado) : [];
-    } catch { return []; }
-  });
+  const [historial, setHistorial] = useState([]);
+  const [historialCargado, setHistorialCargado] = useState(false);
 
   // Cuando cambia el maquinista, recargar datos del nuevo usuario
   useEffect(() => {
     if (!maquinista) return;
-    // Ruta activa desde sessionStorage
     try {
       const ruta = sessionStorage.getItem(KEY_RUTA);
       setRutaActiva(ruta ? JSON.parse(ruta) : null);
@@ -59,10 +55,11 @@ export const EstacionProvider = ({ children, maquinista }) => {
     } catch { }
 
     // Historial desde el backend (persiste entre sesiones)
-    fetch(`http://localhost:5000/api/registros/maquinista/${maquinista}`)
+    fetch(`${API_URL}/api/registros/maquinista/${maquinista}`)
       .then(r => r.json())
       .then(data => {
         if (Array.isArray(data)) setHistorial(data);
+        setHistorialCargado(true);
       })
       .catch(() => {
         // Fallback a sessionStorage si el backend falla
@@ -70,12 +67,13 @@ export const EstacionProvider = ({ children, maquinista }) => {
           const hist = sessionStorage.getItem(KEY_HIST);
           setHistorial(hist ? JSON.parse(hist) : []);
         } catch { }
+        setHistorialCargado(true);
       });
   }, [maquinista]);
 
   const sincronizarTerminal = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/rutas');
+      const res = await fetch(`${API_URL}/api/rutas`);
       if (!res.ok) throw new Error("Error en la red");
       const data = await res.json();
       setRutas(data);
@@ -163,7 +161,7 @@ export const EstacionProvider = ({ children, maquinista }) => {
 
   return (
     <EstacionContext.Provider value={{
-      rutas, stats, cargando, rutaActiva, reportes, historial,
+      rutas, stats, cargando, rutaActiva, reportes, historial, historialCargado,
       sincronizarTerminal, despacharRutaActiva,
       guardarProgreso, finalizarRuta, abandonarRuta
     }}>
