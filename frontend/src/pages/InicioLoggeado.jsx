@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import Tren from '../components/Tren';
 import { useEstacion } from '../context/EstacionContext';
@@ -48,7 +49,7 @@ const ModalBitacora = ({ ruta, onClose, onSeguir, yaCompletada }) => {
   const cfg = criterioConfig[criterio] || criterioConfig['Manual'];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#1A1A1A]/95 backdrop-blur-md text-left">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#1A1A1A]/95 backdrop-blur-md text-left">
       <div className="bg-white border-4 border-[#FF5F00] w-full sm:max-w-2xl max-h-[92dvh] sm:max-h-[90vh] shadow-[0px_-8px_0px_0px_#FF5F00] sm:shadow-[10px_10px_0px_0px_#1A1A1A] flex flex-col overflow-hidden rounded-t-lg sm:rounded-none">
 
         {/* HEADER */}
@@ -283,69 +284,82 @@ const InicioLoggeado = ({ setIsLogged }) => {
     });
 
   return (
-      <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white relative" onClick={iniciarAudio}>
-      
+    <div className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans selection:bg-[#FF5F00] selection:text-white relative" onClick={iniciarAudio}>
+
       {/* FONDO DE CUADRÍCULA */}
       <div className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none" 
            style={{ backgroundImage: 'linear-gradient(#1A1A1A 1px, transparent 1px), linear-gradient(90deg, #1A1A1A 1px, transparent 1px)', backgroundSize: '40px 40px' }}>
       </div>
 
+      {/* ── MODALES FUERA DEL DIV CON backdrop-blur ── */}
+
+      {/* MODAL BIENVENIDA */}
+      {mostrarBienvenida && historialCargado && historial.length === 0 && !rutaActiva && createPortal(
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#1A1A1A]/90 backdrop-blur-sm">
+          <div className="bg-white border-4 border-[#FF5F00] w-full max-w-md shadow-[12px_12px_0px_0px_#FF5F00]">
+            <div className="bg-[#FF5F00] p-6 border-b-4 border-[#1A1A1A]">
+              <span className="font-mono text-[9px] uppercase tracking-widest text-black/60 block mb-1">Primera_Vez // Bienvenido</span>
+              <h2 className="text-2xl font-black uppercase italic leading-none text-black">¡Bienvenido, {maquinista}!</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="font-mono text-xs uppercase text-gray-600 leading-relaxed">
+                Próxima Estación es una red de itinerarios literarios. Cada ruta es una secuencia de libros que otros lectores curaron para vos.
+              </p>
+              <div className="space-y-2">
+                {[
+                  { n: '01', t: 'Explorá las rutas disponibles abajo' },
+                  { n: '02', t: 'Abrí una bitácora para ver sus libros' },
+                  { n: '03', t: 'Abordá la que más te guste y empezá a leer' },
+                  { n: '04', t: 'También podés registrar libros que ya leíste' },
+                ].map(({ n, t }) => (
+                  <div key={n} className="flex items-center gap-3 border-l-4 border-[#FF5F00] pl-3">
+                    <span className="font-black text-[#1A1A1A]/20 text-lg leading-none">{n}</span>
+                    <p className="font-mono text-[10px] uppercase font-black">{t}</p>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={cerrarBienvenida}
+                className="w-full bg-[#1A1A1A] text-white py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-black transition-all shadow-[4px_4px_0px_0px_#FF5F00] active:scale-95 mt-2">
+                Entendido, ¡a leer! →
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* MODAL BITÁCORA DE RUTA */}
+      {rutaSeleccionada && createPortal(
+        <ModalBitacora
+          ruta={rutaSeleccionada}
+          onClose={() => setRutaSeleccionada(null)}
+          onSeguir={handleAbordar}
+          yaCompletada={historialCargado && historial.some(h => String(h.rutaId) === String(rutaSeleccionada._id))}
+        />,
+        document.body
+      )}
+
+      {/* ALERTA DE ERROR */}
+      {errorTerminal && createPortal(
+        <div className="fixed top-0 left-0 w-full z-[200] bg-red-600 text-white font-black p-4 flex justify-between items-center animate-in slide-in-from-top duration-300">
+          <div className="flex items-center gap-4">
+            <span className="bg-black text-white px-2 py-1 text-[10px]">ALERT_ERR</span>
+            <span className="uppercase tracking-tighter text-sm">{errorTerminal}</span>
+          </div>
+          <button onClick={() => setErrorTerminal(null)} className="border-2 border-white px-4 py-1 hover:bg-white hover:text-red-600 transition-all font-mono text-xs uppercase">[Cerrar]</button>
+        </div>,
+        document.body
+      )}
+
+      {/* ── CONTENIDO PRINCIPAL ── */}
       <div className="relative z-10">
-        {/* BIENVENIDA USUARIO NUEVO */}
-        {mostrarBienvenida && historialCargado && historial.length === 0 && !rutaActiva && (
-          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#1A1A1A]/90 backdrop-blur-sm">
-            <div className="bg-white border-4 border-[#FF5F00] w-full max-w-md shadow-[12px_12px_0px_0px_#FF5F00]">
-              <div className="bg-[#FF5F00] p-6 border-b-4 border-[#1A1A1A]">
-                <span className="font-mono text-[9px] uppercase tracking-widest text-black/60 block mb-1">Primera_Vez // Bienvenido</span>
-                <h2 className="text-2xl font-black uppercase italic leading-none text-black">¡Bienvenido, {maquinista}!</h2>
-              </div>
-              <div className="p-6 space-y-4">
-                <p className="font-mono text-xs uppercase text-gray-600 leading-relaxed">
-                  Próxima Estación es una red de itinerarios literarios. Cada ruta es una secuencia de libros que otros lectores curaron para vos.
-                </p>
-                <div className="space-y-2">
-                  {[
-                    { n: '01', t: 'Explorá las rutas disponibles abajo' },
-                    { n: '02', t: 'Abrí una bitácora para ver sus libros' },
-                    { n: '03', t: 'Abordá la que más te guste y empezá a leer' },
-                    { n: '04', t: 'También podés registrar libros que ya leíste' },
-                  ].map(({ n, t }) => (
-                    <div key={n} className="flex items-center gap-3 border-l-4 border-[#FF5F00] pl-3">
-                      <span className="font-black text-[#1A1A1A]/20 text-lg leading-none">{n}</span>
-                      <p className="font-mono text-[10px] uppercase font-black">{t}</p>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={cerrarBienvenida}
-                  className="w-full bg-[#1A1A1A] text-white py-4 font-black uppercase text-xs hover:bg-[#FF5F00] hover:text-black transition-all shadow-[4px_4px_0px_0px_#FF5F00] active:scale-95 mt-2">
-                  Entendido, ¡a leer! →
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* MODALES Y ALERTAS */}
-        {errorTerminal && (
-          <div className="fixed top-0 left-0 w-full z-[200] bg-red-600 text-white font-black p-4 flex justify-between items-center animate-in slide-in-from-top duration-300">
-            <div className="flex items-center gap-4">
-              <span className="bg-black text-white px-2 py-1 text-[10px]">ALERT_ERR</span>
-              <span className="uppercase tracking-tighter text-sm">{errorTerminal}</span>
-            </div>
-            <button onClick={() => setErrorTerminal(null)} className="border-2 border-white px-4 py-1 hover:bg-white hover:text-red-600 transition-all font-mono text-xs uppercase">[Cerrar]</button>
-          </div>
-        )}
-
-        {rutaSeleccionada && <ModalBitacora ruta={rutaSeleccionada} onClose={() => setRutaSeleccionada(null)} onSeguir={handleAbordar} yaCompletada={historialCargado && historial.some(h => String(h.rutaId) === String(rutaSeleccionada._id))} />}
-
         <nav className="px-4 py-4 md:p-10 flex justify-between items-center border-b-4 border-[#1A1A1A] sticky top-0 bg-[#F5F5F5]/80 backdrop-blur-md z-50">
           <div className="flex items-center gap-4 font-black uppercase text-2xl italic tracking-tighter">
             <div className="w-10 h-10 bg-[#1A1A1A] text-[#FF5F00] flex items-center justify-center border-b-4 border-[#FF5F00]">P</div>
             Próxima Estación <span className="text-[#FF5F00] not-italic ml-2 font-mono text-xs tracking-widest opacity-40">v.1.0</span>
           </div>
           <div className="flex gap-2 md:gap-4 items-center">
-            {/* Desktop: botón completo */}
             <Link 
               to="/perfil" 
               className="hidden md:flex px-6 py-3 bg-[#1A1A1A] text-white font-black uppercase text-xs shadow-[5px_5px_0px_0px_#FF5F00] hover:bg-[#FF5F00] hover:text-black transition-all items-center gap-3"
@@ -353,7 +367,6 @@ const InicioLoggeado = ({ setIsLogged }) => {
               <span className="text-[#FF5F00] font-mono animate-pulse">[ o ]</span>
               Terminal // {maquinista}
             </Link>
-            {/* Mobile: solo ícono perfil */}
             <Link
               to="/perfil"
               className="md:hidden w-10 h-10 bg-[#1A1A1A] text-[#FF5F00] flex items-center justify-center font-black border-b-2 border-[#FF5F00] text-xs"

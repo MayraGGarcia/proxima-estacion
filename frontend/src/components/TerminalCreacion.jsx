@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import API_URL from '../config';
 
 const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
@@ -56,43 +57,39 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
 
   // 4. LÓGICA DE DESPACHO AL BACKEND
   const handleDespacharAlServidor = async () => {
-  const payload = {
-    nombre: nombreRuta,
-    estaciones: convoy,
-    configuracion: {
-      metodo: criterio, // 'Manual', 'Kilometraje' o 'Cronología'
-      esPublica: esPublica,
-      justificacion: criterio === 'Manual' ? justificacion : 'Sistema Automático'
-    },
-    pasajeros: 1 //El que creo que la Ruta es el primer pasajero
-  };
+    const payload = {
+      nombre: nombreRuta,
+      estaciones: convoy,
+      configuracion: {
+        metodo: criterio,
+        esPublica: esPublica,
+        justificacion: criterio === 'Manual' ? justificacion : 'Sistema Automático'
+      },
+      pasajeros: 1
+    };
 
-  try {
-    const response = await fetch(`${API_URL}/api/despacho`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    try {
+      const response = await fetch(`${API_URL}/api/despacho`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-    if (response.ok) {
-      const data = await response.json();
-      console.log("Despacho exitoso:", data);
-      
-      // IMPORTANTE: Pasamos los datos al contexto para que el tren empiece a moverse
-      if (onSave) onSave(data); 
-      
-      onClose(); 
-    } else {
-      // Si el servidor responde pero con error (ej: 400 o 500)
-      const errorData = await response.json();
-      console.error("Detalle del error:", errorData);
-      alert(`Error en el servidor: ${errorData.error || 'Verifique los datos'}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Despacho exitoso:", data);
+        if (onSave) onSave(data);
+        onClose();
+      } else {
+        const errorData = await response.json();
+        console.error("Detalle del error:", errorData);
+        alert(`Error en el servidor: ${errorData.error || 'Verifique los datos'}`);
+      }
+    } catch (err) {
+      console.error("Error de conexión:", err);
+      alert("No se pudo conectar con el servidor. ¿Está encendido el Backend?");
     }
-  } catch (err) {
-    console.error("Error de conexión:", err);
-    alert("No se pudo conectar con el servidor. ¿Está encendido el Backend?");
-  }
-};
+  };
 
   // VALIDACIÓN DE DESPACHO
   const despachoHabilitado = 
@@ -102,7 +99,7 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4">
       <div className="bg-[#E8E4D9] border-4 border-[#1A1A1A] w-full max-w-6xl h-[95vh] md:h-[90vh] flex flex-col shadow-[10px_10px_0px_0px_#FF5F00] md:shadow-[20px_20px_0px_0px_#FF5F00] overflow-hidden">
         
@@ -227,7 +224,6 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
                         <button onClick={() => setConvoy(convoy.filter(c => c.id !== est.id))} className="text-[10px] font-mono hover:text-[#FF5F00]"> [X] </button>
                       </div>
                     </div>
-                    {/* INFO SEGÚN CRITERIO */}
                     <div className="text-left">
                       {criterio === 'Kilometraje' && <p className="text-[#FF5F00] font-mono text-[10px] font-bold tracking-widest">{est.paginas} KILÓMETROS</p>}
                       {criterio === 'Cronología' && <p className="text-[#FF5F00] font-mono text-[10px] font-bold tracking-widest">AÑO {est.año}</p>}
@@ -251,7 +247,8 @@ const TerminalCreacion = ({ isOpen, onClose, onSave }) => {
           </section>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

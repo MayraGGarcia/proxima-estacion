@@ -39,7 +39,7 @@ Copiar el archivo de ejemplo en la carpeta `frontend`:
 ```bash
 cp frontend/.env.example frontend/.env
 ```
-Por defecto apunta a `http://localhost:5000`. Si el backend corre en otro puerto o servidor, cambiar `VITE_API_URL` en ese archivo.
+Por defecto apunta a `http://localhost:3001`. Si el backend corre en otro puerto o servidor, cambiar `VITE_API_URL` en ese archivo.
 
 ### 4. Cargar datos iniciales (opcional)
 Para poblar la base de datos con rutas de ejemplo:
@@ -71,7 +71,7 @@ La app queda disponible en `http://localhost:5173`
 - **Sistema de XP y niveles** — ganás experiencia al completar acciones
 - **Logros desbloqueables** — 5 logros con condiciones variadas
 - **Desafío semanal** — una ruta destacada que cambia cada semana
-- **Muro de pasajeros** — ver las bitácoras de otros usuarios sobre la misma ruta
+- **Muro de registros** — ver las bitácoras de otros usuarios sobre la misma ruta
 
 ### Técnicas
 - Aislamiento completo de datos por usuario
