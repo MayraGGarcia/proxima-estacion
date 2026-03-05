@@ -102,6 +102,8 @@ const FichaEstacion = () => {
       setCargando(true);
       const res = await fetch(`${API_URL}/api/resenas/libro/${encodeURIComponent(libro.titulo)}`);
       const data = await res.json();
+      console.log('DATA:', data); 
+      console.log('RESENAS:', data.resenas);
       setResenas(data.resenas || []);
       setPromedio(data.promedio);
       setTotal(data.total || 0);
@@ -111,6 +113,8 @@ const FichaEstacion = () => {
       setCargando(false);
     }
   };
+
+  
 
   useEffect(() => { cargarResenas(); }, [libro.titulo]);
 

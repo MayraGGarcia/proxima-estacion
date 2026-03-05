@@ -1,95 +1,184 @@
-const Registro = require('../models/Registro');
-const Ruta = require('../models/Ruta');
+//registroController.js: Lógica para manejar registros de rutas, bitácoras y reportes finales
 
-// Guardar el registro completo de un maquinista al finalizar una ruta
+const db = require('../db');
+
 const publicarRegistro = async (req, res) => {
+  const conn = await db.getConnection();
   try {
-    const { rutaId, maquinista, bitacoras, reporteFinal } = req.body;
+    const { rutaId, maquinista, bitacoras = [], reporteFinal } = req.body;
 
-    // Verificar que el rutaId es un ObjectId válido antes de buscar
-    const mongoose = require('mongoose');
-    if (!mongoose.Types.ObjectId.isValid(rutaId)) {
-      return res.status(400).json({ 
-        message: "ID de ruta inválido. La ruta debe estar guardada en el servidor antes de poder registrar una bitácora.",
-        rutaId 
-      });
+    const [rutas] = await conn.execute('SELECT id FROM rutas WHERE id = ?', [rutaId]);
+    if (rutas.length === 0)
+      return res.status(404).json({ message: 'Ruta no encontrada en la red' });
+
+    await conn.beginTransaction();
+
+    const [result] = await conn.execute(
+      `INSERT INTO registros (ruta_id, maquinista, reporte_final)
+       VALUES (?, ?, ?)`,
+      [rutaId, maquinista, reporteFinal]
+    );
+    const registroId = result.insertId;
+
+    for (let i = 0; i < bitacoras.length; i++) {
+      const b = bitacoras[i];
+      await conn.execute(
+        `INSERT INTO bitacoras (registro_id, posicion, estacion_titulo, estacion_autor, texto)
+         VALUES (?, ?, ?, ?, ?)`,
+        [registroId, i, b.estacionTitulo ?? null, b.estacionAutor ?? null, b.texto ?? null]
+      );
     }
 
-    const ruta = await Ruta.findById(rutaId);
-    if (!ruta) {
-      return res.status(404).json({ message: "Ruta no encontrada en la red" });
-    }
+    await conn.execute(
+      'UPDATE rutas SET pasajeros = pasajeros + 1 WHERE id = ?',
+      [rutaId]
+    );
 
-    const nuevoRegistro = new Registro({ rutaId, maquinista, bitacoras, reporteFinal });
-    const registroGuardado = await nuevoRegistro.save();
-
-    await Ruta.findByIdAndUpdate(rutaId, { $inc: { pasajeros: 1 } });
-
-    res.status(201).json(registroGuardado);
+    await conn.commit();
+    res.status(201).json({ id: registroId, rutaId, maquinista, reporteFinal, bitacoras });
   } catch (error) {
-    res.status(400).json({ message: "Error al publicar el registro", error: error.message });
+    await conn.rollback();
+    res.status(400).json({ message: 'Error al publicar el registro', error: error.message });
+  } finally {
+    conn.release();
   }
 };
 
-// Obtener todos los registros de una ruta específica (el muro de esa ruta)
 const obtenerRegistrosPorRuta = async (req, res) => {
   try {
     const { rutaId } = req.params;
-    const mongoose = require('mongoose');
-    if (!mongoose.Types.ObjectId.isValid(rutaId)) {
-      return res.json([]);
-    }
-    const registros = await Registro.find({ rutaId })
-      .populate('rutaId', 'estaciones')
-      .sort({ fechaFinalizacion: -1 });
 
-    const estaciones = registros[0]?.rutaId?.estaciones || [];
-    const resultado = registros.map(r => ({
-      _id: r._id,
-      maquinista: r.maquinista,
-      reporteFinal: r.reporteFinal,
-      fechaFinalizacion: r.fechaFinalizacion,
-      bitacoras: r.bitacoras.map((b, i) => ({
-        estacionTitulo: b.estacionTitulo || estaciones[i]?.titulo || '',
-        estacionAutor: b.estacionAutor || estaciones[i]?.autor || '',
-        portada: estaciones[i]?.portada || null,
-        texto: b.texto || ''
-      }))
-    }));
+    const [registros] = await db.execute(
+      `SELECT id, maquinista, reporte_final, fecha_finalizacion
+       FROM registros
+       WHERE ruta_id = ?
+       ORDER BY fecha_finalizacion DESC`,
+      [rutaId]
+    );
+    if (registros.length === 0) return res.json([]);
+
+    const registroIds = registros.map(r => r.id);
+    const [estaciones] = await db.execute(
+      'SELECT * FROM estaciones WHERE ruta_id = ? ORDER BY posicion',
+      [rutaId]
+    );
+    const [bitacoras] = await db.execute(
+      `SELECT * FROM bitacoras
+       WHERE registro_id IN (${registroIds.map(() => '?').join(',')})
+       ORDER BY posicion`,
+      registroIds
+    );
+
+    // Índice de estaciones por posición
+    const estPorPosicion = {};
+    for (const e of estaciones) {
+      estPorPosicion[e.posicion] = e;
+    }
+
+    // Índice de bitácoras por registro y posición
+    const bitsPorRegistro = {};
+    for (const b of bitacoras) {
+      if (!bitsPorRegistro[b.registro_id]) bitsPorRegistro[b.registro_id] = {};
+      bitsPorRegistro[b.registro_id][b.posicion] = b;
+    }
+
+    const posiciones = Object.keys(estPorPosicion).map(Number).sort((a, b) => a - b);
+
+    const resultado = registros.map(r => {
+      const bits = bitsPorRegistro[r.id] || {};
+      return {
+        id:                r.id,
+        maquinista:        r.maquinista,
+        reporteFinal:      r.reporte_final,
+        fechaFinalizacion: r.fecha_finalizacion,
+        bitacoras: posiciones.map(pos => ({
+          estacionTitulo: bits[pos]?.estacion_titulo || estPorPosicion[pos]?.titulo || '',
+          estacionAutor:  bits[pos]?.estacion_autor  || estPorPosicion[pos]?.autor  || '',
+          portada:        estPorPosicion[pos]?.portada || null,
+          texto:          bits[pos]?.texto || '',
+        })),
+      };
+    });
+
     res.json(resultado);
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener los registros" });
+    res.status(500).json({ message: 'Error al obtener los registros', error: error.message });
   }
 };
 
-// Obtener todos los registros de un maquinista (para el historial del perfil)
 const obtenerRegistrosPorMaquinista = async (req, res) => {
   try {
     const { maquinista } = req.params;
-    const registros = await Registro.find({ maquinista })
-      .populate('rutaId', 'nombre estaciones')
-      .sort({ fechaFinalizacion: -1 });
 
-    const historial = registros.map(r => ({
-      id: r._id,
-      rutaId: r.rutaId?._id?.toString(),
-      titulo: r.rutaId?.nombre || 'Ruta eliminada',
-      estaciones: (r.rutaId?.estaciones || []).map((e, i) => ({
-        titulo: e.titulo,
-        autor: e.autor,
-        portada: e.portada,
-        paginas: e.paginas,
-        año: e.año,
-        completada: true,
-        bitacora: r.bitacoras[i]?.texto || ''
-      })),
-      reporteFinal: r.reporteFinal,
-      fechaFinalizacion: r.fechaFinalizacion
-    }));
+    // Query limpia sin JOIN de estaciones — evita multiplicación de filas
+    const [registros] = await db.execute(
+      `SELECT r.id, r.ruta_id, r.reporte_final, r.fecha_finalizacion,
+              ru.nombre AS ruta_nombre
+       FROM registros r
+       JOIN rutas ru ON ru.id = r.ruta_id
+       WHERE r.maquinista = ?
+       ORDER BY r.fecha_finalizacion DESC`,
+      [maquinista]
+    );
+
+    if (registros.length === 0) return res.json([]);
+
+    const registroIds = registros.map(r => r.id);
+    const rutaIds     = [...new Set(registros.map(r => r.ruta_id))];
+
+    const [bitacoras] = await db.execute(
+      `SELECT * FROM bitacoras
+       WHERE registro_id IN (${registroIds.map(() => '?').join(',')})
+       ORDER BY posicion`,
+      registroIds
+    );
+    const [estaciones] = await db.execute(
+      `SELECT * FROM estaciones
+       WHERE ruta_id IN (${rutaIds.map(() => '?').join(',')})
+       ORDER BY posicion`,
+      rutaIds
+    );
+
+    // Índice bitácoras: { registro_id: { posicion: bitacora } }
+    const bitsPorRegistro = {};
+    for (const b of bitacoras) {
+      if (!bitsPorRegistro[b.registro_id]) bitsPorRegistro[b.registro_id] = {};
+      bitsPorRegistro[b.registro_id][b.posicion] = b;
+    }
+
+    // Índice estaciones: { ruta_id: { posicion: estacion } }
+    const estsPorRuta = {};
+    for (const e of estaciones) {
+      if (!estsPorRuta[e.ruta_id]) estsPorRuta[e.ruta_id] = {};
+      estsPorRuta[e.ruta_id][e.posicion] = e;
+    }
+
+    const historial = registros.map(r => {
+      const ests = estsPorRuta[r.ruta_id] || {};
+      const bits = bitsPorRegistro[r.id]  || {};
+      const posiciones = Object.keys(ests).map(Number).sort((a, b) => a - b);
+
+      return {
+        id:     r.id,
+        rutaId: r.ruta_id,
+        titulo: r.ruta_nombre || 'Ruta eliminada',
+        estaciones: posiciones.map(pos => ({
+          titulo:     ests[pos]?.titulo  || '',
+          autor:      ests[pos]?.autor   || '',
+          portada:    ests[pos]?.portada || null,
+          paginas:    ests[pos]?.paginas || null,
+          año:        ests[pos]?.anio    || null,
+          completada: true,
+          bitacora:   bits[pos]?.texto   || '',
+        })),
+        reporteFinal:      r.reporte_final,
+        fechaFinalizacion: r.fecha_finalizacion,
+      };
+    });
 
     res.json(historial);
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener historial", error: error.message });
+    res.status(500).json({ message: 'Error al obtener historial', error: error.message });
   }
 };
 

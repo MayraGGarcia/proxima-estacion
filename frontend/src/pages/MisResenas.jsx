@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import API_URL from '../config';
 
-const MAQUINISTA = sessionStorage.getItem('maquinista') || 'ANONIMO';
+const getMaquinista = () => sessionStorage.getItem('maquinista') || 'ANONIMO';
 
 const Estrellas = ({ valor, onChange = null, size = 'normal' }) => {
   const [hover, setHover] = useState(0);
@@ -56,7 +56,7 @@ const MisResenas = () => {
   const cargarResenas = async () => {
     try {
       setCargando(true);
-      const data = await fetch(`${API_URL}/api/resenas/maquinista/${MAQUINISTA}`).then(r => r.json());
+      const data = await fetch(`${API_URL}/api/resenas/maquinista/${getMaquinista()}`).then(r => r.json());
       setResenas(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
@@ -116,7 +116,7 @@ const MisResenas = () => {
           libroPortada: libroSeleccionado.portada,
           libroPaginas: libroSeleccionado.paginas,
           libroAño: libroSeleccionado.año,
-          maquinista: MAQUINISTA,
+          maquinista: getMaquinista(),
           estrellas,
           texto: texto.trim()
         })
@@ -138,7 +138,7 @@ const MisResenas = () => {
 
   const handleEliminar = async (libroTitulo) => {
     if (!window.confirm('¿Eliminar esta reseña?')) return;
-    await fetch(`${API_URL}/api/resenas/${encodeURIComponent(libroTitulo)}/${MAQUINISTA}`, { method: 'DELETE' });
+    await fetch(`${API_URL}/api/resenas/${encodeURIComponent(libroTitulo)}/${getMaquinista()}`, { method: 'DELETE' });
     setResenas(prev => prev.filter(r => r.libroTitulo !== libroTitulo));
   };
 
@@ -167,7 +167,7 @@ const MisResenas = () => {
             ← Volver al Perfil
           </Link>
           <span className="font-mono text-[9px] uppercase text-gray-400 tracking-widest">
-            Mis_Reseñas // {MAQUINISTA}
+            Mis_Reseñas // {getMaquinista()}
           </span>
         </div>
 

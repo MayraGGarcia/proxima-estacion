@@ -61,7 +61,7 @@ export const PerfilProvider = ({ children, maquinista }) => {
 
   const verificarDesafio = async (rutaId) => {
     if (!desafioActivo || desafioActivo.completado) return false;
-    if (String(desafioActivo.rutaId?._id || desafioActivo.rutaId) !== String(rutaId)) return false;
+    if (String(desafioActivo.rutaId?.id || desafioActivo.rutaId) !== String(rutaId)) return false;
     await ganarXP(desafioActivo.xpRecompensa, 'desafio_completado', { desafioId: desafioActivo.semanaId });
     setDesafioActivo(prev => ({ ...prev, completado: true }));
     return true;

@@ -34,7 +34,7 @@ const FlapStat = ({ label, value }) => {
   );
 };
 
-// --- [COMPONENTE 2]: MODAL DE BITÁCORA (DETALLE) ---
+// --- [COMPONENTE 2]: MODAL DE BITÁCORA ---
 const ModalBitacora = ({ ruta, onClose, onSeguir, yaCompletada }) => {
   if (!ruta) return null;
 
@@ -55,7 +55,7 @@ const ModalBitacora = ({ ruta, onClose, onSeguir, yaCompletada }) => {
         {/* HEADER */}
         <div className="bg-[#1A1A1A] px-4 py-3 md:p-6 flex justify-between items-center border-b-4 border-[#FF5F00] flex-shrink-0">
           <div className="min-w-0 pr-2">
-            <span className="text-[#FF5F00] font-mono text-[9px] uppercase tracking-widest block mb-0.5 opacity-70">REF_{ruta._id?.slice(-6).toUpperCase()}</span>
+            <span className="text-[#FF5F00] font-mono text-[9px] uppercase tracking-widest block mb-0.5 opacity-70">REF_{String(ruta.id).padStart(6, '0')}</span>
             <h2 className="text-white text-lg md:text-3xl font-black uppercase italic leading-none tracking-tighter truncate">{ruta.nombre}</h2>
           </div>
           <button onClick={onClose} className="text-white hover:text-[#FF5F00] font-black text-2xl p-1 flex-shrink-0 transition-colors">✕</button>
@@ -242,7 +242,7 @@ const InicioLoggeado = ({ setIsLogged }) => {
       setTimeout(() => setErrorTerminal(null), 5000);
       return;
     }
-    const yaCompletada = historialCargado && historial.some(h => String(h.rutaId) === String(ruta._id));
+    const yaCompletada = historialCargado && historial.some(h => String(h.rutaId) === String(ruta.id));
     if (yaCompletada) {
       setErrorTerminal(`VÍA_TRANSITADA: Ya completaste la línea "${ruta.nombre}". Buscá una nueva ruta.`);
       setRutaSeleccionada(null);
@@ -251,14 +251,14 @@ const InicioLoggeado = ({ setIsLogged }) => {
     }
 
     try {
-      const res = await fetch(`${API_URL}/api/rutas/${ruta._id}/abordar`, { 
+      const res = await fetch(`${API_URL}/api/rutas/${ruta.id}/abordar`, { 
         method: 'PUT' 
       });
       if (!res.ok) throw new Error("Fallo en la sincronización");
       const actualizada = await res.json();
       despacharRutaActiva(actualizada);
       await ganarXP(10, 'ruta_abordada');
-      setRutas(rutas.map(r => r._id === actualizada._id ? actualizada : r));
+      setRutas(rutas.map(r => r.id === actualizada._id ? actualizada : r));
       setRutaSeleccionada(null);
       setErrorTerminal(null);
       navigate('/ruta/activa');
@@ -411,11 +411,11 @@ const InicioLoggeado = ({ setIsLogged }) => {
               <p className="col-span-full font-black uppercase animate-pulse text-center py-20">Sincronizando_Vías...</p>
             ) : filtradas.length > 0 ? (
               filtradas.map(ruta => {
-                const completada = historialCargado && historial.some(h => String(h.rutaId) === String(ruta._id));
+                const completada = historialCargado && historial.some(h => String(h.rutaId) === String(ruta.id));
                 return (
-                <article key={ruta._id} className={`border-4 p-8 shadow-[12px_12px_0px_0px_#1A1A1A] transition-all text-left flex flex-col h-full ${completada ? 'bg-[#F5F5F5] border-[#FF5F00]' : 'bg-white border-[#1A1A1A] group hover:translate-x-1 hover:translate-y-1'}`}>
+                <article key={ruta.id} className={`border-4 p-8 shadow-[12px_12px_0px_0px_#1A1A1A] transition-all text-left flex flex-col h-full ${completada ? 'bg-[#F5F5F5] border-[#FF5F00]' : 'bg-white border-[#1A1A1A] group hover:translate-x-1 hover:translate-y-1'}`}>
                   <div className="flex justify-between items-center mb-8 border-b-2 border-gray-100 pb-4">
-                    <span className="font-mono text-[10px] font-black text-gray-400 uppercase tracking-widest">Live_Feed // #{ruta._id?.slice(-3)}</span>
+                    <span className="font-mono text-[10px] font-black text-gray-400 uppercase tracking-widest">Live_Feed // #{String(ruta.id).padStart(3, '0')}</span>
                     {completada
                       ? <span className="font-black text-[9px] uppercase bg-[#FF5F00] text-black px-2 py-0.5 tracking-widest">✓ Completada</span>
                       : <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -448,7 +448,7 @@ const InicioLoggeado = ({ setIsLogged }) => {
             <div className="px-8 mb-4 font-mono text-[10px] font-bold opacity-30 uppercase tracking-[0.5em]">
               Tráfico de Unidades en Vivo // Red_Global
             </div>
-            <Tren lineasAleatorias={rutas.slice(0, 10).map(r => ({ id: r._id, nombre: r.nombre.toUpperCase() }))} />
+            <Tren lineasAleatorias={rutas.slice(0, 10).map(r => ({ id: r.id, nombre: r.nombre.toUpperCase() }))} />
           </div>
 
           {/* BANNER Y DESAFÍO */}

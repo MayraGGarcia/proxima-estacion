@@ -1,65 +1,100 @@
-const Resena = require('../models/Resena');
+//resenaController.js: Lógica para manejar reseñas de libros
 
-// Crear o actualizar la reseña de un maquinista sobre un libro
+const db = require('../db');
+
 const crearResena = async (req, res) => {
   try {
-    const { libroTitulo, libroAutor, libroPortada, libroPaginas, libroAño, maquinista, estrellas, texto } = req.body;
+    const { libroTitulo, libroAutor, libroPortada, libroPaginas,
+            libroAño, maquinista, estrellas, texto } = req.body;
 
-    if (!libroTitulo || !maquinista || !estrellas || !texto) {
+    if (!libroTitulo || !maquinista || !estrellas || !texto)
       return res.status(400).json({ message: 'Faltan campos obligatorios' });
-    }
 
-    const resena = await Resena.findOneAndUpdate(
-      { libroTitulo, maquinista },
-      { libroTitulo, libroAutor, libroPortada, libroPaginas, libroAño, maquinista, estrellas, texto },
-      { returnDocument: 'after', upsert: true, runValidators: true }
+    await db.execute(
+      `INSERT INTO resenas
+         (libro_titulo, libro_autor, libro_portada, libro_paginas, libro_anio, maquinista, estrellas, texto)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         libro_autor   = VALUES(libro_autor),
+         libro_portada = VALUES(libro_portada),
+         libro_paginas = VALUES(libro_paginas),
+         libro_anio    = VALUES(libro_anio),
+         estrellas     = VALUES(estrellas),
+         texto         = VALUES(texto),
+         updated_at    = CURRENT_TIMESTAMP`,
+      [libroTitulo, libroAutor ?? null, libroPortada ?? null,
+       libroPaginas ?? null, libroAño ?? null, maquinista, estrellas, texto]
     );
 
-    res.status(201).json(resena);
+    const [rows] = await db.execute(
+      'SELECT * FROM resenas WHERE libro_titulo = ? AND maquinista = ?',
+      [libroTitulo, maquinista]
+    );
+
+    res.status(201).json(mapearResena(rows[0]));
   } catch (err) {
     res.status(400).json({ message: 'Error al guardar la reseña', error: err.message });
   }
 };
 
-// Obtener todas las reseñas de un libro específico
 const obtenerResenasPorLibro = async (req, res) => {
   try {
     const { libroTitulo } = req.params;
-    const resenas = await Resena.find({ 
-      libroTitulo: { $regex: new RegExp(`^${libroTitulo}$`, 'i') } 
-    }).sort({ createdAt: -1 });
+    const [resenas] = await db.execute(
+      'SELECT * FROM resenas WHERE libro_titulo = ? ORDER BY created_at DESC',
+      [libroTitulo]
+    );
 
-    // Calcular promedio de estrellas
-    const promedio = resenas.length > 0
-      ? (resenas.reduce((acc, r) => acc + r.estrellas, 0) / resenas.length).toFixed(1)
+    const mapeadas = resenas.map(mapearResena);
+    const promedio = mapeadas.length > 0
+      ? (mapeadas.reduce((acc, r) => acc + r.estrellas, 0) / mapeadas.length).toFixed(1)
       : null;
 
-    res.json({ resenas, promedio, total: resenas.length });
+    res.json({ resenas: mapeadas, promedio, total: mapeadas.length });
   } catch (err) {
-    res.status(500).json({ message: 'Error al obtener reseñas', error: err.message });
+    res.status(500).json({ message: 'Error al obtener reseñas' });
   }
 };
 
-// Obtener todas las reseñas escritas por un maquinista (para el Perfil)
 const obtenerResenasPorMaquinista = async (req, res) => {
   try {
     const { maquinista } = req.params;
-    const resenas = await Resena.find({ maquinista }).sort({ createdAt: -1 });
-    res.json(resenas);
+    const [resenas] = await db.execute(
+      'SELECT * FROM resenas WHERE maquinista = ? ORDER BY created_at DESC',
+      [maquinista]
+    );
+    res.json(resenas.map(mapearResena));
   } catch (err) {
-    res.status(500).json({ message: 'Error al obtener reseñas del maquinista', error: err.message });
+    res.status(500).json({ message: 'Error al obtener reseñas del maquinista' });
   }
 };
 
-// Eliminar la reseña de un maquinista sobre un libro
 const eliminarResena = async (req, res) => {
   try {
     const { libroTitulo, maquinista } = req.params;
-    await Resena.findOneAndDelete({ libroTitulo, maquinista });
+    await db.execute(
+      'DELETE FROM resenas WHERE libro_titulo = ? AND maquinista = ?',
+      [libroTitulo, maquinista]
+    );
     res.json({ ok: true });
   } catch (err) {
-    res.status(500).json({ message: 'Error al eliminar reseña', error: err.message });
+    res.status(500).json({ message: 'Error al eliminar reseña' });
   }
 };
+
+// Helper: snake_case → camelCase
+const mapearResena = (r) => ({
+  id:           r.id,
+  libroTitulo:  r.libro_titulo,
+  libroAutor:   r.libro_autor,
+  libroPortada: r.libro_portada,
+  libroPaginas: r.libro_paginas,
+  libroAño:     r.libro_anio,
+  maquinista:   r.maquinista,
+  estrellas:    r.estrellas,
+  texto:        r.texto,
+  createdAt:    r.created_at,
+  updatedAt:    r.updated_at,
+});
 
 module.exports = { crearResena, obtenerResenasPorLibro, obtenerResenasPorMaquinista, eliminarResena };

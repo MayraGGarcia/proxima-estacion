@@ -101,7 +101,7 @@ export const EstacionProvider = ({ children, maquinista }) => {
 
   const despacharRutaActiva = (rutaDespachada) => {
     const nuevaRutaActiva = {
-      id: rutaDespachada._id || `LOCAL-${Date.now()}`,
+      id: rutaDespachada.id || `LOCAL-${Date.now()}`,
       titulo: rutaDespachada.nombre,
       pasajeros: rutaDespachada.pasajeros || 1,
       estaciones: rutaDespachada.estaciones.map((est, i) => ({
