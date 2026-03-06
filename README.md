@@ -12,7 +12,7 @@ El proyecto aplica una arquitectura desacoplada (Frontend/Backend) con un diseñ
 |------|-----------|
 | Frontend | React + Vite + Tailwind CSS |
 | Backend | Node.js + Express |
-| Base de datos | MongoDB (Mongoose) |
+| Base de datos | MySQL |
 | API de libros | Open Library API |
 
 ---
@@ -21,7 +21,7 @@ El proyecto aplica una arquitectura desacoplada (Frontend/Backend) con un diseñ
 
 ### Requisitos previos
 - Node.js v18 o superior
-- MongoDB corriendo localmente en el puerto 27017
+- MySQL corriendo localmente en el puerto 3306
 
 ### 1. Clonar el repositorio
 ```bash
@@ -41,15 +41,32 @@ cp frontend/.env.example frontend/.env
 ```
 Por defecto apunta a `http://localhost:3001`. Si el backend corre en otro puerto o servidor, cambiar `VITE_API_URL` en ese archivo.
 
-### 4. Cargar datos iniciales (opcional)
-Para poblar la base de datos con rutas de ejemplo:
+Crear un archivo `.env` en la carpeta `backend` con los datos de conexión a MySQL:
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=tu_usuario
+DB_PASSWORD=tu_contraseña
+DB_NAME=proxima_estacion
+```
+
+### 4. Crear la base de datos
+Ejecutar el schema SQL para crear las tablas:
+```bash
+cd backend
+mysql -u tu_usuario -p proxima_estacion < schema.sql
+```
+
+### 5. Cargar datos iniciales
+Para poblar la base de datos con rutas de ejemplo y usuarios demo:
 ```bash
 cd backend
 node seed.js
 node seedDesafios.js
+node seedUsuarios.js
 ```
 
-### 5. Iniciar el proyecto
+### 6. Iniciar el proyecto
 Desde la raíz del proyecto, un solo comando levanta frontend y backend:
 ```bash
 npm start
@@ -75,9 +92,9 @@ La app queda disponible en `http://localhost:5173`
 
 ### Técnicas
 - Aislamiento completo de datos por usuario
-- API REST con Express y validación de ObjectIds
+- API REST con Express y esquema relacional SQL
 - Diseño responsive mobile-first
-- Variables de entorno para configuración del backend
+- Variables de entorno para configuración del backend y la base de datos
 
 ---
 
@@ -94,10 +111,11 @@ proxima-estacion/
 │   └── .env.example
 ├── backend/
 │   ├── controllers/        # Lógica de cada endpoint
-│   ├── models/             # Esquemas de Mongoose
+│   ├── schema.sql          # Definición de tablas y relaciones
 │   ├── server.js           # Punto de entrada del servidor
 │   ├── seed.js             # Datos iniciales de rutas
-│   └── seedDesafios.js     # Datos iniciales de desafíos
+│   ├── seedDesafios.js     # Datos iniciales de desafíos
+│   └── seedUsuarios.js     # Usuarios demo precargados
 └── package.json            # Scripts unificados
 ```
 
