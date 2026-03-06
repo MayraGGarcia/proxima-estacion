@@ -25,7 +25,7 @@ export const EstacionProvider = ({ children, maquinista }) => {
     try {
       const guardados = sessionStorage.getItem(KEY_REP);
       const parsed = guardados ? JSON.parse(guardados) : [];
-
+      // Sanear reporteFinal: si es objeto, extraer el texto
       return parsed.map(r => ({
         ...r,
         reporteFinal: typeof r.reporteFinal === 'object' && r.reporteFinal !== null
@@ -41,6 +41,7 @@ export const EstacionProvider = ({ children, maquinista }) => {
   // Cuando cambia el maquinista, recargar datos del nuevo usuario
   useEffect(() => {
     if (!maquinista) return;
+    // Ruta activa desde sessionStorage (es de sesión, está bien)
     try {
       const ruta = sessionStorage.getItem(KEY_RUTA);
       setRutaActiva(ruta ? JSON.parse(ruta) : null);
@@ -101,8 +102,8 @@ export const EstacionProvider = ({ children, maquinista }) => {
 
   const despacharRutaActiva = (rutaDespachada) => {
     const nuevaRutaActiva = {
-      id: rutaDespachada.id || `LOCAL-${Date.now()}`,
-      titulo: rutaDespachada.nombre,
+      id: rutaDespachada.rutaId || rutaDespachada.id || rutaDespachada._id || `LOCAL-${Date.now()}`,
+      titulo: rutaDespachada.nombre || rutaDespachada.titulo,
       pasajeros: rutaDespachada.pasajeros || 1,
       estaciones: rutaDespachada.estaciones.map((est, i) => ({
         id: `est-${i}`,

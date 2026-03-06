@@ -17,8 +17,8 @@ const RutaActiva = () => {
   const [misResenas, setMisResenas] = useState([]);
   const [sobreescribir, setSobreescribir] = useState(false);
   const [estrellasComentario, setEstrellasComentario] = useState(0);
+  const [enviando, setEnviando] = useState(false);
 
-  // Cargar reseñas del usuario para mostrar badge en estación actual
   useEffect(() => {
     fetch(`${API_URL}/api/resenas/maquinista/${MAQUINISTA}`)
       .then(r => r.json())
@@ -26,28 +26,18 @@ const RutaActiva = () => {
       .catch(() => {});
   }, []);
 
-  // Inicializar estaciones desde el context (ya trae el progreso guardado)
   const [estacionesLocales, setEstacionesLocales] = useState(
     rutaActiva ? rutaActiva.estaciones : []
   );
 
-  // Cronómetro de tránsito
   useEffect(() => {
     const timer = setInterval(() => setTiempoEnVia(p => p + 1), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Cargar reseñas propias para detectar libros ya reseñados
-  useEffect(() => {
-    fetch(`${API_URL}/api/resenas/maquinista/${MAQUINISTA}`)
-      .then(r => r.json())
-      .then(data => setMisResenas(Array.isArray(data) ? data : []))
-      .catch(() => {});
-  }, []);
-
   if (!rutaActiva) {
     return (
-        <div className="min-h-screen bg-[#F5F5F5] flex flex-col items-center justify-center p-8 font-sans">
+      <div className="min-h-screen bg-[#F5F5F5] flex flex-col items-center justify-center p-8 font-sans">
         <h2 className="text-4xl font-black italic uppercase mb-8">No hay ruta activa en el sistema</h2>
         <Link to="/perfil" className="bg-[#1A1A1A] text-white px-8 py-4 font-black uppercase text-xs hover:bg-[#FF5F00] shadow-[6px_6px_0px_0px_#FF5F00]">
           Ir al Perfil de Despacho
@@ -68,8 +58,6 @@ const RutaActiva = () => {
     : estacionesLocales[estacionesLocales.length - 1];
   const rutaFinalizada = estacionActualIdx === -1;
 
-  // RN-01: Solo se puede avanzar si la bitácora tiene contenido
-  // Si ya tiene reseña previa, puede avanzar sin escribir nada nuevo (usa la reseña como bitácora)
   const resenaActual = misResenas.find(r => r.libroTitulo === estacionActual?.titulo);
   const puedeValidar = resenaActual && !sobreescribir
     ? true
@@ -82,7 +70,6 @@ const RutaActiva = () => {
       ? resenaActual.texto
       : comentario.trim();
 
-    // Guardar o actualizar la reseña en el backend
     const debeGuardarResena = !resenaActual || sobreescribir;
     if (debeGuardarResena && comentario.trim() && estrellasComentario > 0) {
       try {
@@ -90,17 +77,16 @@ const RutaActiva = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            libroTitulo: estacionActual.titulo,
-            libroAutor: estacionActual.autor || 'Desconocido',
-            libroPortada: estacionActual.portada || null,
-            libroPaginas: estacionActual.paginas || null,
-            libroAño: estacionActual.año || null,
-            maquinista: MAQUINISTA,
-            estrellas: estrellasComentario,
-            texto: comentario.trim()
+            libroTitulo:  estacionActual.titulo,
+            libroAutor:   estacionActual.autor   || 'Desconocido',
+            libroPortada: estacionActual.portada  || null,
+            libroPaginas: estacionActual.paginas  || null,
+            libroAño:     estacionActual.año      || null,
+            maquinista:   MAQUINISTA,
+            estrellas:    estrellasComentario,
+            texto:        comentario.trim()
           })
         }).then(r => r.json());
-        // Actualizar lista local de reseñas para que el badge aparezca de inmediato
         setMisResenas(prev => {
           const sinEsta = prev.filter(r => r.libroTitulo !== estacionActual.titulo);
           return [...sinEsta, nuevaResena];
@@ -122,13 +108,11 @@ const RutaActiva = () => {
     setSobreescribir(false);
   };
 
-  // Salir temporalmente: guarda el progreso y vuelve al perfil SIN borrar la ruta
   const handleSalir = () => {
     guardarProgreso(estacionesLocales);
     navigate('/perfil');
   };
 
-  // Abandonar definitivamente: confirma y borra la ruta del context
   const handleAbandonar = () => {
     if (window.confirm('¿Abandonar definitivamente esta ruta? Todo el progreso se perderá.')) {
       abandonarRuta();
@@ -137,44 +121,50 @@ const RutaActiva = () => {
   };
 
   const handleEnviarReporte = async () => {
-    if (!reporteFinal.trim()) return;
+    if (!reporteFinal.trim() || enviando) return;
 
-    // Publicar el registro en el backend para que todos los maquinistas lo vean
+    const rutaId = rutaActiva.id;
+    setEnviando(true);
+
+    // FIX: esperar confirmación del backend antes de navegar
     try {
-      await fetch(`${API_URL}/api/registros`, {
+      const res = await fetch(`${API_URL}/api/registros`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          rutaId: rutaActiva.id,
+          rutaId,
           maquinista: MAQUINISTA,
           bitacoras: estacionesLocales.map(e => ({
             estacionTitulo: e.titulo,
-            estacionAutor: e.autor,
-            texto: e.bitacora || ''
+            estacionAutor:  e.autor,
+            texto:          e.bitacora || ''
           })),
           reporteFinal: reporteFinal.trim()
         })
       });
+
+      if (!res.ok) {
+        console.error('Error al publicar registro:', await res.text());
+        setEnviando(false);
+        return;
+      }
     } catch (err) {
-      console.error("No se pudo publicar el registro:", err);
+      console.error('No se pudo publicar el registro:', err);
+      setEnviando(false);
+      return;
     }
 
-    // Sumar XP por completar la ruta
     const bitacorasEscritas = estacionesLocales.filter(e => e.bitacora?.trim()).length;
     await ganarXP(50, 'ruta_completada', { bitacorasNuevas: bitacorasEscritas });
-
-    // Verificar si era el desafío semanal activo
-    await verificarDesafio(rutaActiva.id);
-
-    // Guardar localmente en el context (para el historial del perfil)
+    await verificarDesafio(rutaId);
     finalizarRuta(reporteFinal.trim());
-    navigate(`/muro/${rutaActiva.id}`);
+
+    // FIX: navegar solo después de que el registro fue guardado en el backend
+    navigate(`/muro/${rutaId}`);
   };
 
   return (
     <div onClick={iniciarAudio} className="min-h-screen bg-[#F5F5F5] text-[#1A1A1A] font-sans relative overflow-x-hidden text-left">
-
-      {/* TOAST: Ruta completada */}
       <div className="relative z-10 p-3 md:p-8 max-w-7xl mx-auto">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-8 md:mb-12 border-b-4 border-[#1A1A1A] pb-6 md:pb-8">
           <div>
@@ -190,20 +180,12 @@ const RutaActiva = () => {
               <p className="font-mono text-[9px] font-black uppercase opacity-40 leading-none mb-1">Tiempo_Viaje</p>
               <p className="text-2xl font-black font-mono leading-none">{formatearTiempo(tiempoEnVia)}</p>
             </div>
-
-            {/* Salir: guarda progreso, no borra la ruta */}
-            <button
-              onClick={handleSalir}
-              className="bg-white border-4 border-[#1A1A1A] px-6 py-4 font-black uppercase text-xs hover:bg-[#1A1A1A] hover:text-white transition-all shadow-[4px_4px_0px_0px_#1A1A1A]"
-            >
+            <button onClick={handleSalir}
+              className="bg-white border-4 border-[#1A1A1A] px-6 py-4 font-black uppercase text-xs hover:bg-[#1A1A1A] hover:text-white transition-all shadow-[4px_4px_0px_0px_#1A1A1A]">
               ← Salir
             </button>
-
-            {/* Abandonar: destruye la ruta (con confirmación) */}
-            <button
-              onClick={handleAbandonar}
-              className="bg-[#1A1A1A] text-white px-6 py-4 font-black uppercase text-xs hover:bg-red-700 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]"
-            >
+            <button onClick={handleAbandonar}
+              className="bg-[#1A1A1A] text-white px-6 py-4 font-black uppercase text-xs hover:bg-red-700 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
               Abandonar Ruta
             </button>
           </div>
@@ -253,27 +235,16 @@ const RutaActiva = () => {
                         <p className="text-xl font-bold uppercase italic text-[#FF5F00]">{estacionActual?.autor}</p>
                         <button
                           onClick={() => navigate(`/estacion/${encodeURIComponent(estacionActual?.titulo)}`, {
-                            state: {
-                              titulo: estacionActual?.titulo,
-                              autor: estacionActual?.autor,
-                              portada: estacionActual?.portada,
-                              paginas: estacionActual?.paginas,
-                              año: estacionActual?.año
-                            }
+                            state: { titulo: estacionActual?.titulo, autor: estacionActual?.autor, portada: estacionActual?.portada, paginas: estacionActual?.paginas, año: estacionActual?.año }
                           })}
-                          className="border-2 border-[#1A1A1A] px-4 py-2 font-black uppercase text-[9px] hover:bg-[#FF5F00] transition-all bg-white shadow-[3px_3px_0px_0px_#1A1A1A] active:shadow-none"
-                        >
+                          className="border-2 border-[#1A1A1A] px-4 py-2 font-black uppercase text-[9px] hover:bg-[#FF5F00] transition-all bg-white shadow-[3px_3px_0px_0px_#1A1A1A] active:shadow-none">
                           Ver Ficha →
                         </button>
                       </div>
                       {resenaExistente && (
                         <div className="flex items-center gap-3 bg-[#1A1A1A] border-2 border-[#FF5F00] px-4 py-2 w-fit">
-                          <span className="text-[#FF5F00] font-black text-sm">
-                            {'★'.repeat(resenaExistente.estrellas)}
-                          </span>
-                          <span className="text-white font-mono text-[9px] uppercase tracking-widest">
-                            Ya reseñaste este libro
-                          </span>
+                          <span className="text-[#FF5F00] font-black text-sm">{'★'.repeat(resenaExistente.estrellas)}</span>
+                          <span className="text-white font-mono text-[9px] uppercase tracking-widest">Ya reseñaste este libro</span>
                           <button
                             onClick={() => navigate(`/estacion/${encodeURIComponent(estacionActual?.titulo)}`, {
                               state: { titulo: estacionActual?.titulo, autor: estacionActual?.autor, portada: estacionActual?.portada }
@@ -295,7 +266,6 @@ const RutaActiva = () => {
                     <span className="text-2xl font-black uppercase">{estacionActual?.paginas} KM</span>
                   </div>
                   {resenaActual && !sobreescribir ? (
-                    /* RESEÑA PREVIA BLOQUEADA */
                     <div className="border-4 border-[#1A1A1A] bg-[#1A1A1A]">
                       <div className="flex items-center justify-between px-4 py-2 border-b-2 border-white/10">
                         <div className="flex items-center gap-2">
@@ -309,19 +279,15 @@ const RutaActiva = () => {
                         </button>
                       </div>
                       <div className="p-4">
-                        <p className="font-bold text-xs uppercase text-white/60 italic leading-relaxed">
-                          "{resenaActual.texto}"
-                        </p>
+                        <p className="font-bold text-xs uppercase text-white/60 italic leading-relaxed">"{resenaActual.texto}"</p>
                       </div>
                     </div>
                   ) : (
-                    /* TEXTAREA HABILITADO */
                     <div className="relative">
                       {sobreescribir && (
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-mono text-[9px] uppercase text-[#FF5F00] font-black">Editando reseña anterior</span>
-                          <button
-                            onClick={() => { setSobreescribir(false); setComentario(''); }}
+                          <button onClick={() => { setSobreescribir(false); setComentario(''); }}
                             className="font-mono text-[9px] uppercase border border-black/20 px-2 py-1 hover:bg-black hover:text-white transition-all">
                             Cancelar
                           </button>
@@ -346,14 +312,11 @@ const RutaActiva = () => {
                       </div>
                     </div>
                   )}
-                  <button
-                    onClick={handleValidarArribo}
-                    disabled={!puedeValidar}
+                  <button onClick={handleValidarArribo} disabled={!puedeValidar}
                     className={`w-full border-4 border-[#1A1A1A] py-5 font-black uppercase italic transition-all
                       ${puedeValidar
                         ? 'bg-[#FF5F00] shadow-[6px_6px_0px_0px_#1A1A1A] hover:translate-x-1 hover:translate-y-1 hover:shadow-none cursor-pointer'
-                        : 'bg-gray-300 opacity-50 cursor-not-allowed'}`}
-                  >
+                        : 'bg-gray-300 opacity-50 cursor-not-allowed'}`}>
                     {puedeValidar ? 'Validar Arribo →' : 'Escribí la bitácora y elegí puntuación para continuar'}
                   </button>
                 </div>
@@ -366,15 +329,12 @@ const RutaActiva = () => {
                     placeholder="Escribe el reporte final del trayecto..."
                     className="w-full bg-[#F5F5F5] border-4 border-[#1A1A1A] p-6 font-bold text-xs uppercase outline-none focus:bg-white h-40 resize-none"
                   />
-                  <button
-                    onClick={handleEnviarReporte}
-                    disabled={!reporteFinal.trim()}
+                  <button onClick={handleEnviarReporte} disabled={!reporteFinal.trim() || enviando}
                     className={`w-full border-4 border-[#1A1A1A] py-5 font-black uppercase italic transition-all
-                      ${reporteFinal.trim()
+                      ${reporteFinal.trim() && !enviando
                         ? 'bg-[#FF5F00] shadow-[6px_6px_0px_0px_#1A1A1A] cursor-pointer'
-                        : 'bg-gray-300 opacity-50 cursor-not-allowed'}`}
-                  >
-                    Enviar Reporte a la Central
+                        : 'bg-gray-300 opacity-50 cursor-not-allowed'}`}>
+                    {enviando ? 'Publicando en la Central...' : 'Enviar Reporte a la Central'}
                   </button>
                 </div>
               )}

@@ -306,7 +306,7 @@ const Perfil = () => {
                         Abordar →
                       </button>
                     ) : (
-                      <button onClick={() => navigate(`/muro/${r.id}`)}
+                      <button onClick={() => navigate(`/muro/${r.rutaId || r.id}`)}
                         className="w-full md:w-auto px-6 py-4 font-black uppercase text-[10px] border-2 border-[#1A1A1A] bg-white hover:bg-black hover:text-white transition-all shadow-[4px_4px_0px_0px_#000] active:shadow-none">
                         Ver Bitácora →
                       </button>

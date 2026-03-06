@@ -31,62 +31,58 @@ const PortadaEstacion = ({ est }) => {
 
 const BitacoraRuta = ({ rutaId }) => {
   const navigate = useNavigate();
-  const { rutas, historial, reportes } = useEstacion();
   const [registrosBackend, setRegistrosBackend] = useState([]);
-  const [nombreRuta, setNombreRuta] = useState('');
-
-  const infoLocal = reportes.find(r => String(r.id) === String(rutaId)) || 
-                    rutas.find(r => String(r.id) === String(rutaId)) ||
-                    historial.find(r => String(r.id) === String(rutaId));
+  const [tituloRuta, setTituloRuta] = useState('Cargando...');
+  const [cargando, setCargando] = useState(true);
 
   useEffect(() => {
-    const nombreYaResuelto = infoLocal?.nombre || infoLocal?.ruta || infoLocal?.titulo;
-    if (nombreYaResuelto) return;
-    fetch(`${API_URL}/api/rutas/${rutaId}`)
-      .then(r => r.json())
-      .then(data => { if (data?.nombre) setNombreRuta(data.nombre); })
-      .catch(() => {});
-  }, [rutaId, infoLocal]);
-
-  const tituloRuta = infoLocal?.nombre || infoLocal?.ruta || infoLocal?.titulo || nombreRuta || 'Cargando...';
-
-  useEffect(() => {
-    // Limpiar registros anteriores antes de cargar los nuevos
+    // FIX 1: limpiar estado anterior inmediatamente al cambiar de ruta
     setRegistrosBackend([]);
+    setTituloRuta('Cargando...');
+    setCargando(true);
 
-    const normalizar = (lista) => (Array.isArray(lista) ? lista : [lista]).filter(Boolean).map(reg => ({
-      ...reg,
-      reporteFinal: reg.reporteFinal || reg.extracto || '',
-      bitacoras: (reg.bitacoras || []).map(b => ({
-        estacionTitulo: b.estacionTitulo || b.titulo,
-        estacionAutor: b.estacionAutor || b.autor,
-        portada: b.portada || b.imagen,
-        texto: b.texto || b.bitacora
-      }))
-    }));
+    const cargar = async () => {
+      try {
+        // Fetch nombre de ruta y registros en paralelo
+        const [rutaRes, regRes] = await Promise.all([
+          fetch(`${API_URL}/api/rutas/${rutaId}`),
+          fetch(`${API_URL}/api/registros/${rutaId}`)
+        ]);
 
-    const cargarPorRutaId = (id) =>
-      fetch(`${API_URL}/api/registros/${id}`)
-        .then(res => res.json())
-        .then(data => setRegistrosBackend(normalizar(data)))
-        .catch(err => console.error("Error cargando muro:", err));
+        // Parsear nombre de ruta — no bloquear si falla
+        try {
+          const rutaData = await rutaRes.json();
+          if (rutaData?.nombre) setTituloRuta(rutaData.nombre);
+        } catch { setTituloRuta('Ruta'); }
 
-    fetch(`${API_URL}/api/registros/detalle/${rutaId}`)
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data?.id) {
-          const idRutaReal = data.rutaId?.id || data.rutaId;
-          if (idRutaReal) {
-            cargarPorRutaId(idRutaReal);
-          } else {
-            setRegistrosBackend(normalizar(data));
-          }
-        } else {
-          cargarPorRutaId(rutaId);
-        }
-      })
-      .catch(() => cargarPorRutaId(rutaId));
-  }, [rutaId]);
+        // Parsear registros — no bloquear si falla
+        try {
+          const regData = await regRes.json();
+          const lista = Array.isArray(regData) ? regData : [regData].filter(Boolean);
+          setRegistrosBackend(lista.map(reg => ({
+            ...reg,
+            reporteFinal: reg.reporteFinal || reg.extracto || '',
+            bitacoras: (reg.bitacoras || []).map(b => ({
+              estacionTitulo: b.estacionTitulo || b.titulo   || '',
+              estacionAutor:  b.estacionAutor  || b.autor    || '',
+              portada:        b.portada        || b.imagen   || null,
+              texto:          b.texto          || b.bitacora || '',
+            }))
+          })));
+        } catch { setRegistrosBackend([]); }
+
+      } catch (err) {
+        console.error('Error cargando muro:', err);
+        setTituloRuta('Error al cargar');
+        setRegistrosBackend([]);
+      } finally {
+        // siempre desactivar el spinner — nunca quedar colgado
+        setCargando(false);
+      }
+    };
+
+    cargar();
+  }, [rutaId]); // se re-ejecuta cada vez que cambia rutaId
 
   const maquinistaActual = sessionStorage.getItem('maquinista') || '';
   const registrosFinales = [...registrosBackend].sort((a, b) => {
@@ -109,58 +105,68 @@ const BitacoraRuta = ({ rutaId }) => {
           </h1>
         </header>
 
-        <div className="space-y-12">
-          {registrosFinales.map((reg, idx) => {
-            const esMio = reg.maquinista === maquinistaActual;
-            return (
-              <div key={idx} className={`border-4 bg-white shadow-[10px_10px_0px_0px_#1A1A1A] ${esMio ? 'border-[#FF5F00]' : 'border-black'}`}>
-                <div className={`p-4 flex justify-between items-center text-white ${esMio ? 'bg-[#FF5F00]' : 'bg-black'}`}>
-                  <div className="flex items-center gap-3">
-                    <span className={`font-black uppercase italic ${esMio ? 'text-black' : 'text-white'}`}>{reg.maquinista}</span>
-                    {esMio && <span className="font-black text-[9px] uppercase bg-black text-[#FF5F00] px-2 py-0.5">Tu Bitácora</span>}
+        {cargando ? (
+          <div className="py-20 text-center font-black uppercase animate-pulse opacity-40 text-xs">
+            Sincronizando registros...
+          </div>
+        ) : registrosFinales.length === 0 ? (
+          <div className="py-20 border-4 border-dashed border-[#1A1A1A]/10 text-center uppercase font-black opacity-20">
+            Sin registros todavía
+          </div>
+        ) : (
+          <div className="space-y-12">
+            {registrosFinales.map((reg, idx) => {
+              const esMio = reg.maquinista === maquinistaActual;
+              return (
+                <div key={idx} className={`border-4 bg-white shadow-[10px_10px_0px_0px_#1A1A1A] ${esMio ? 'border-[#FF5F00]' : 'border-black'}`}>
+                  <div className={`p-4 flex justify-between items-center text-white ${esMio ? 'bg-[#FF5F00]' : 'bg-black'}`}>
+                    <div className="flex items-center gap-3">
+                      <span className={`font-black uppercase italic ${esMio ? 'text-black' : 'text-white'}`}>{reg.maquinista}</span>
+                      {esMio && <span className="font-black text-[9px] uppercase bg-black text-[#FF5F00] px-2 py-0.5">Tu Bitácora</span>}
+                    </div>
+                    <span className={`font-mono text-[10px] opacity-60 ${esMio ? 'text-black' : 'text-white'}`}>
+                      {reg.fechaFinalizacion ? new Date(reg.fechaFinalizacion).toLocaleDateString("es-AR") : ""}
+                    </span>
                   </div>
-                  <span className={`font-mono text-[10px] opacity-60 ${esMio ? 'text-black' : 'text-white'}`}>
-                    {reg.fechaFinalizacion ? new Date(reg.fechaFinalizacion).toLocaleDateString("es-AR") : ""}
-                  </span>
-                </div>
-                
-                <div className="divide-y-2 divide-black/5">
-                  {reg.bitacoras?.map((bit, i) => (
-                    <div key={i} className="p-6 flex gap-6">
-                      <PortadaEstacion est={bit} />
-                      <div className="flex-grow">
-                        <div className="flex justify-between items-start gap-2 mb-1">
-                          <p className="font-black uppercase text-sm">{bit.estacionTitulo}</p>
-                          <button
-                            onClick={() => navigate(`/estacion/${encodeURIComponent(bit.estacionTitulo)}`, {
-                              state: { titulo: bit.estacionTitulo, autor: bit.estacionAutor, portada: bit.portada }
-                            })}
-                            className="flex-shrink-0 border-2 border-[#1A1A1A] px-3 py-1 font-black uppercase text-[8px] hover:bg-[#FF5F00] transition-all bg-white shadow-[2px_2px_0px_0px_#1A1A1A] active:shadow-none"
-                          >
-                            Ver Ficha →
-                          </button>
-                        </div>
-                        <p className="font-mono text-[9px] text-gray-400 uppercase mb-4">{bit.estacionAutor}</p>
-                        <div className="bg-[#F5F5F5] border-l-4 border-[#FF5F00] p-4 text-xs italic font-bold">
-                          "{bit.texto || 'Sin comentarios en esta estación.'}"
+                  
+                  <div className="divide-y-2 divide-black/5">
+                    {reg.bitacoras?.map((bit, i) => (
+                      <div key={i} className="p-6 flex gap-6">
+                        <PortadaEstacion est={bit} />
+                        <div className="flex-grow">
+                          <div className="flex justify-between items-start gap-2 mb-1">
+                            <p className="font-black uppercase text-sm">{bit.estacionTitulo}</p>
+                            <button
+                              onClick={() => navigate(`/estacion/${encodeURIComponent(bit.estacionTitulo)}`, {
+                                state: { titulo: bit.estacionTitulo, autor: bit.estacionAutor, portada: bit.portada }
+                              })}
+                              className="flex-shrink-0 border-2 border-[#1A1A1A] px-3 py-1 font-black uppercase text-[8px] hover:bg-[#FF5F00] transition-all bg-white shadow-[2px_2px_0px_0px_#1A1A1A] active:shadow-none"
+                            >
+                              Ver Ficha →
+                            </button>
+                          </div>
+                          <p className="font-mono text-[9px] text-gray-400 uppercase mb-4">{bit.estacionAutor}</p>
+                          <div className="bg-[#F5F5F5] border-l-4 border-[#FF5F00] p-4 text-xs italic font-bold">
+                            "{bit.texto || 'Sin comentarios en esta estación.'}"
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                {reg.reporteFinal && (
-                  <div className="bg-[#FFFAF5] p-6 border-t-4 border-[#FF5F00]">
-                    <p className="text-[#FF5F00] font-black text-[8px] uppercase mb-2">Comentario Final:</p>
-                    <div className="bg-black text-white p-5 font-bold text-sm italic">
-                      "{reg.reporteFinal}"
-                    </div>
+                    ))}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+
+                  {reg.reporteFinal && (
+                    <div className="bg-[#FFFAF5] p-6 border-t-4 border-[#FF5F00]">
+                      <p className="text-[#FF5F00] font-black text-[8px] uppercase mb-2">Comentario Final:</p>
+                      <div className="bg-black text-white p-5 font-bold text-sm italic">
+                        "{reg.reporteFinal}"
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -203,7 +209,7 @@ const MuroGlobal = ({ rutas, reportes }) => {
 const MuroEstaciones = () => {
   const { rutaId } = useParams();
   const { reportes, rutas } = useEstacion();
-  return rutaId ? <BitacoraRuta rutaId={rutaId} /> : <MuroGlobal rutas={rutas} reportes={reportes} />;
+  return rutaId ? <BitacoraRuta key={rutaId} rutaId={rutaId} /> : <MuroGlobal rutas={rutas} reportes={reportes} />;
 };
 
 export default MuroEstaciones;
